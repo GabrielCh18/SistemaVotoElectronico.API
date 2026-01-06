@@ -1,43 +1,31 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SistemaVotoElectronico.API.Data;
+using SistemaVotoElectronico.API.Models;
 
 namespace SistemaVotoElectronico.API.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
+    [Authorize] // Requiere autenticación JWT para acceder
     public class VotacionController : ControllerBase
     {
-        // GET: api/<VotacionController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        private readonly ApplicationDbContext _context;
+
+        public VotacionController(ApplicationDbContext context)
         {
-            return new string[] { "value1", "value2" };
+            _context = context;
         }
 
-        // GET api/<VotacionController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpPost("registrar-voto")]
+        public IActionResult RegistrarVoto([FromBody] VotoDTO voto)
         {
-            return "value";
-        }
+            // Aquí se implementará la lógica de:
+            // 1. Validar que el usuario no haya votado antes.
+            // 2. Proceso de anonimización y cifrado.
+            // 3. Registro inmutable en la base de datos.
 
-        // POST api/<VotacionController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
-
-        // PUT api/<VotacionController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<VotacionController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            return Ok("Voto registrado de forma segura y anónima.");
         }
     }
 }

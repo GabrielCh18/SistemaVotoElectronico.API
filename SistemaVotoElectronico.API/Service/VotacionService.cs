@@ -1,21 +1,28 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-public class VotacionService
+namespace SistemaVotoElectronico.API.Services
 {
-    public Dictionary<string, int> CalcularDHondt(Dictionary<string, int> votosPorLista, int escañosTotales)
+    public class VotacionService
     {
-        var escañosAsignados = votosPorLista.Keys.ToDictionary(lista => lista, lista => 0); 
-
-        for (int i = 0; i < escañosTotales; i++)
+        // Cambiamos el nombre a CalcularDHondt para que coincida con el Controller
+        public Dictionary<string, int> CalcularDHondt(Dictionary<string, int> votosPorLista, int escañosTotales)
         {
-           // Aplicar fórmula: Votos / (EscañosAsignados + 1) 
-            var listaGanadora = votosPorLista
-                .OrderByDescending(kvp => kvp.Value / (escañosAsignados[kvp.Key] + 1))
-                .First().Key;
+            // Verificamos que haya votos para evitar errores de división por cero
+            if (votosPorLista == null || !votosPorLista.Any()) return new Dictionary<string, int>();
 
-            escañosAsignados[listaGanadora]++;
+            var escañosAsignados = votosPorLista.Keys.ToDictionary(lista => lista, lista => 0);
+
+            for (int i = 0; i < escañosTotales; i++)
+            {
+                // Aplicamos la fórmula: Votos / (Escaños + 1)
+                var listaGanadora = votosPorLista
+                    .OrderByDescending(kvp => (double)kvp.Value / (escañosAsignados[kvp.Key] + 1))
+                    .First().Key;
+
+                escañosAsignados[listaGanadora]++;
+            }
+            return escañosAsignados;
         }
-        return escañosAsignados;
     }
 }

@@ -1,7 +1,8 @@
-using Microsoft.EntityFrameworkCore;
-using SistemaVotoElectronico.API.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using SistemaVotoElectronico.API.Data;
+using SistemaVotoElectronico.API.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<VotacionService>();
 
 var app = builder.Build();
 

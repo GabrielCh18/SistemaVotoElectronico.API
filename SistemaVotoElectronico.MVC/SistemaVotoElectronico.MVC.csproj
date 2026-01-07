@@ -6,4 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SistemaVotoElectronico.ApiConsumer\SistemaVotoElectronico.ApiConsumer.csproj" />
+  </ItemGroup>
+
 </Project>

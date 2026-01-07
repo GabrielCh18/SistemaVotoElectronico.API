@@ -4,7 +4,10 @@ using System.Text;
 
 namespace SistemaVotoElectronico.Modelos
 {
-    internal class ApiResult
+    public class ApiResult<T>
     {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public T? Data { get; set; }
     }
 }

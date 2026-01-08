@@ -59,9 +59,13 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 builder.Services.AddScoped<VotacionService>();
-
+builder.Services.AddCors(options => {
+    options.AddDefaultPolicy(policy => {
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    });
+});
 var app = builder.Build();
-
+app.UseCors();
 // 3. Habilitar Autenticación y Autorización
 app.UseAuthentication();
 app.UseAuthorization();

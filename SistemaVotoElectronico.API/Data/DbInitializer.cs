@@ -36,11 +36,12 @@ namespace SistemaVotoElectronico.API.Data
             context.Usuarios.Add(votante);
 
             // 5. Crear una Elección de prueba
+            // C#
             var eleccion = new Eleccion
             {
                 Nombre = "Elecciones Seccionales 2026",
-                FechaInicio = DateTime.Now.AddDays(-1), // Empezó ayer
-                FechaFin = DateTime.Now.AddDays(7),    // Termina en una semana
+                FechaInicio = DateTime.UtcNow.AddDays(-1),
+                FechaFin = DateTime.UtcNow.AddDays(7),
                 TipoEleccion = "Nominal"
             };
             context.Elecciones.Add(eleccion);

@@ -90,5 +90,12 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Ocurrió un error al sembrar la base de datos.");
     }
 }
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    DbInitializer.Initialize(context);
+}
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.MapControllers();
 app.Run();

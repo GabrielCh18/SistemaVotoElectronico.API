@@ -25,7 +25,7 @@ namespace SistemaVotoElectronico.API.Controllers
         public IActionResult Login([FromBody] LoginDTO login)
         {
             // 1. Buscar al usuario en la base de datos por su email [cite: 13]
-            var usuario = _context.Usuarios.FirstOrDefault(u => u.Email == login.Email);
+            var usuario = _context.Usuarios.FirstOrDefault(u => u.Email.ToLower() == login.Email.ToLower());
 
             // 2. Validar credenciales (En un entorno real, aquí se compara el Hash) [cite: 13]
             if (usuario == null || usuario.Password != login.Password)

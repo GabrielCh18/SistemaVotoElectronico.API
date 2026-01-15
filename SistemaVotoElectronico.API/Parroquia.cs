@@ -1,12 +1,13 @@
-﻿using static System.Collections.Specialized.BitVector32;
+﻿using SistemaVotoElectronico.API.Models;
 
-namespace SistemaVotoElectronico.API.Models
+namespace SistemaVotoElectronico.API
 {
     public class Parroquia
     {
         public int Id { get; set; }
         public string Nombre { get; set; }
-        public int ProvinciaId { get; set; }
-        public List<Seccion> Secciones { get; set; } = new();
+        public int CantonId { get; set; }
+        public Canton Canton { get; set; }
+        public List<Zona> Zonas { get; set; }
     }
 }

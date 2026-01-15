@@ -4,8 +4,10 @@
     {
         public int Id { get; set; }
         public int CandidatoId { get; set; }
-        public int SeccionId { get; set; } // Permite reconstruir reportes geográficos
-        public string HashSeguridad { get; set; }
-        public DateTime Fecha { get; set; } = DateTime.Now;
+
+        // Guardamos la JuntaId para poder filtrar los resultados por 
+        // Provincia/Cantón sin saber quién votó.
+        public int JuntaId { get; set; }
+        public DateTime FechaHora { get; set; } = DateTime.Now;
     }
 }

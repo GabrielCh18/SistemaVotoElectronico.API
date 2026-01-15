@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace SistemaVotoElectronico.API.Migrations
 {
-    [DbContext(typeof(ApplicationDbContext))]
+    [DbContext(typeof(VotoElectronicoContext))]
     [Migration("20260115154501_Inicial")]
     partial class Inicial
     {

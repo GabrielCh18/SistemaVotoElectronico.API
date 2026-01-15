@@ -1,17 +1,19 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using SistemaVotoElectronico.API;
+using VotoElectronico.API.Data;
 using Microsoft.OpenApi.Models;
 using SistemaVotoElectronico.API;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configurar la Base de Datos 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-// Usa .UseNpgsql si elegiste PostgreSQL 
+// 1. Obtener la cadena de conexión del appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("VotoElectronicoConnection");
+
+// 2. Configurar el Contexto para usar PostgreSQL (Npgsql)
+builder.Services.AddDbContext<VotoElectronicoContext>(options =>
+    options.UseNpgsql(connectionString));
 
 // 2. Configurar Seguridad JWT [cite: 36]
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -80,7 +82,7 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
+        var context = services.GetRequiredService<VotoElectronicoContext>();
         // Llamamos a nuestra clase de datos iniciales
         //DbInitializer.Initialize(context);
     }
@@ -92,7 +94,7 @@ using (var scope = app.Services.CreateScope())
 }
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var context = scope.ServiceProvider.GetRequiredService<VotoElectronicoContext>();
     //DbInitializer.Initialize(context);
 }
 app.UseDefaultFiles();

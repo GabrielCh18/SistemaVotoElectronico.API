@@ -1,6 +1,4 @@
-﻿using static System.Collections.Specialized.BitVector32;
-
-namespace SistemaVotoElectronico.API.Models
+﻿namespace SistemaVoto.Modelos
 {
     public class Canton
     {

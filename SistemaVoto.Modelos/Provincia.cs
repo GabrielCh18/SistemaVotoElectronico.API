@@ -1,4 +1,4 @@
-﻿namespace SistemaVotoElectronico.API.Models
+﻿namespace SistemaVoto.Modelos
 {
     public class Provincia
     {

@@ -1,6 +1,5 @@
-﻿using SistemaVotoElectronico.API.Models;
-
-namespace SistemaVotoElectronico.API
+﻿
+namespace SistemaVoto.Modelos
 {
     public class Junta
     {

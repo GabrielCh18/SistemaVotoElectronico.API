@@ -1,21 +1,26 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using VotoElectronico.API.Data;
 using Microsoft.OpenApi.Models;
-using SistemaVotoElectronico.API;
 using System.Text;
+
+// 1. Importar el namespace correcto de tu carpeta Data
+using SistemaVotoElectronico.API.Data;
+
+// 2. Importar tus Modelos
+using SistemaVoto.Modelos;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Obtener la cadena de conexión del appsettings.json
+// --- CONFIGURACIÓN DE BASE DE DATOS ---
+// Asegúrate de que en appsettings.json la cadena se llame "VotoElectronicoConnection"
 var connectionString = builder.Configuration.GetConnectionString("VotoElectronicoConnection");
 
-// 2. Configurar el Contexto para usar PostgreSQL (Npgsql)
-builder.Services.AddDbContext<VotoElectronicoContext>(options =>
+// CORRECCIÓN: Aquí usamos 'VotoContext', que es el nombre real de tu clase en la carpeta Data
+builder.Services.AddDbContext<VotoContext>(options =>
     options.UseNpgsql(connectionString));
 
-// 2. Configurar Seguridad JWT [cite: 36]
+// --- CONFIGURACIÓN JWT ---
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
@@ -30,11 +35,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// --- CONFIGURACIÓN SWAGGER ---
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Sistema Voto Electrónico API", Version = "v1" });
 
-    // Configuración para el botón de "Authorize"
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -42,7 +48,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Pega aquí tu token JWT así: Bearer {tu_token}"
+        Description = "Ingrese 'Bearer' [espacio] y luego su token.\r\n\r\nEjemplo: \"Bearer 12345abcdef\""
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -60,44 +66,48 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-//builder.Services.AddScoped<VotacionService>();
+
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
         policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
 });
+
 var app = builder.Build();
+
+// --- PIPELINE DE LA APLICACIÓN ---
+
 app.UseCors();
-// 3. Habilitar Autenticación y Autorización
+
+// Habilitar Swagger siempre
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-//if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+app.MapControllers();
+
+// Validación de conexión al arrancar
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
-        var context = services.GetRequiredService<VotoElectronicoContext>();
-        // Llamamos a nuestra clase de datos iniciales
-        //DbInitializer.Initialize(context);
+        // CORRECCIÓN: Aquí también usamos 'VotoContext'
+        var context = services.GetRequiredService<VotoContext>();
+
+        // Opcional: Esto crea la base de datos si no existe
+        // context.Database.Migrate(); 
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocurrió un error al sembrar la base de datos.");
+        logger.LogError(ex, "Error al conectar con la base de datos.");
     }
 }
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<VotoElectronicoContext>();
-    //DbInitializer.Initialize(context);
-}
-app.UseDefaultFiles();
-app.UseStaticFiles();
-app.MapControllers();
+
 app.Run();

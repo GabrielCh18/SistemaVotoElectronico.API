@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using SistemaVotoElectronico.API.Data;
+using SistemaVotoElectronico.API;
 using Microsoft.OpenApi.Models;
-using SistemaVotoElectronico.API.Services;
+using SistemaVotoElectronico.API;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,7 +58,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-builder.Services.AddScoped<VotacionService>();
+//builder.Services.AddScoped<VotacionService>();
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
         policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
@@ -82,7 +82,7 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         // Llamamos a nuestra clase de datos iniciales
-        DbInitializer.Initialize(context);
+        //DbInitializer.Initialize(context);
     }
     catch (Exception ex)
     {
@@ -93,7 +93,7 @@ using (var scope = app.Services.CreateScope())
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    DbInitializer.Initialize(context);
+    //DbInitializer.Initialize(context);
 }
 app.UseDefaultFiles();
 app.UseStaticFiles();

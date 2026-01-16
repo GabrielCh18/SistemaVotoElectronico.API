@@ -1,17 +1,16 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using VotoElectronico.API.Data;
 using Microsoft.OpenApi.Models;
 using SistemaVotoElectronico.API;
 using System.Text;
+using SistemaVotoElectronico.API.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Obtener la cadena de conexión del appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("VotoElectronicoConnection");
 
-// 2. Configurar el Contexto para usar PostgreSQL (Npgsql)
 builder.Services.AddDbContext<VotoElectronicoContext>(options =>
     options.UseNpgsql(connectionString));
 

@@ -10,7 +10,7 @@ using SistemaVotoElectronico.API.Data;
 
 namespace SistemaVotoElectronico.API.Migrations
 {
-    [DbContext(typeof(VotoElectronicoContext))]
+    [DbContext(typeof(VotoContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

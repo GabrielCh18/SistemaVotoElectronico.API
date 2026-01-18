@@ -11,7 +11,7 @@ using SistemaVotoElectronico.API.Data;
 
 namespace SistemaVotoElectronico.API.Migrations
 {
-    [DbContext(typeof(VotoElectronicoContext))]
+    [DbContext(typeof(VotoContext))]
     [Migration("20260115154501_Inicial")]
     partial class Inicial
     {

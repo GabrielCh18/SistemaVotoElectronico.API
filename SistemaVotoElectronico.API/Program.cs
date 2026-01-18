@@ -3,26 +3,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using SistemaVotoElectronico.API.Data;
-
-// 1. Importar el namespace correcto de tu carpeta Data
-using SistemaVotoElectronico.API.Data;
-
-// 2. Importar tus Modelos
-using SistemaVotoElectronico.API;
+using SistemaVotoElectronico.API.Data; // Solo una vez
+using SistemaVoto.Modelos; // Asegúrate de que la referencia del paso 1 esté lista
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- CONFIGURACIÓN DE BASE DE DATOS ---
-// Asegúrate de que en appsettings.json la cadena se llame "VotoElectronicoConnection"
 var connectionString = builder.Configuration.GetConnectionString("VotoElectronicoConnection");
 
-
 builder.Services.AddDbContext<VotoContext>(options =>
-
-// CORRECCIÓN: Aquí usamos 'VotoContext', que es el nombre real de tu clase en la carpeta Data
-builder.Services.AddDbContext<VotoContext>(options =>
-    options.UseNpgsql(connectionString)));
+    options.UseNpgsql(connectionString));
 
 // --- CONFIGURACIÓN JWT ---
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

@@ -6,6 +6,7 @@ using System.Text;
 using SistemaVotoElectronico.API.Data; // Solo una vez
 using SistemaVoto.Modelos; // Asegúrate de que la referencia del paso 1 esté lista
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 
 // --- CONFIGURACIÓN DE BASE DE DATOS ---
@@ -86,21 +87,23 @@ app.UseStaticFiles();
 app.MapControllers();
 
 // Validación de conexión al arrancar
+// Validación de conexión e inicialización de datos
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
-        // CORRECCIÓN: Aquí también usamos 'VotoContext'
         var context = services.GetRequiredService<VotoContext>();
 
-        // Opcional: Esto crea la base de datos si no existe
-        // context.Database.Migrate(); 
+        // --- LLAMADA AL INICIALIZADOR ---
+        DbInitializer.Initialize(context);
+
+        Console.WriteLine("Base de datos inicializada con éxito.");
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Error al conectar con la base de datos.");
+        logger.LogError(ex, "Error al inicializar la base de datos.");
     }
 }
 

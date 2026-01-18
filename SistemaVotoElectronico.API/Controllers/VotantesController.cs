@@ -43,7 +43,8 @@ namespace SistemaVotoElectronico.API.Controllers
             {
                 VotanteId = votanteId,
                 CodigoUnico = codigo,
-                FechaExpiracion = DateTime.Now.AddMinutes(15), // Válido por 15 minutos
+                // CAMBIO AQUÍ: Usar UtcNow para evitar el Error 500 en Postgres
+                FechaExpiracion = DateTime.UtcNow.AddMinutes(15),
                 FueUsado = false
             };
 

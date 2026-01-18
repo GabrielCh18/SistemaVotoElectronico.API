@@ -1,4 +1,4 @@
-﻿namespace SistemaVotoElectronico.API
+﻿namespace SistemaVoto.Modelos
 {
     public class Votante
     {

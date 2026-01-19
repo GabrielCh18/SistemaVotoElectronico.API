@@ -30,5 +30,6 @@ namespace SistemaVotoElectronico.API.Data
             // El código de votación también debe ser único
             modelBuilder.Entity<TokenVotacion>().HasIndex(t => t.CodigoUnico).IsUnique();
         }
+        public DbSet<ProcesoElectoral> ProcesoElectorales { get; set; }
     }
 }

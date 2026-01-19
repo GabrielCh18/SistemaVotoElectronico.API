@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SistemaVotoElectronico.API.Data;
@@ -11,9 +12,11 @@ using SistemaVotoElectronico.API.Data;
 namespace SistemaVotoElectronico.API.Migrations
 {
     [DbContext(typeof(VotoContext))]
-    partial class VotoContextModelSnapshot : ModelSnapshot
+    [Migration("20260119133332_SeccionOpcionalEnVoto")]
+    partial class SeccionOpcionalEnVoto
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -136,6 +139,28 @@ namespace SistemaVotoElectronico.API.Migrations
                     b.ToTable("Provincias");
                 });
 
+            modelBuilder.Entity("SistemaVoto.Modelos.Seccion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ParroquiaId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParroquiaId");
+
+                    b.ToTable("Seccion");
+                });
+
             modelBuilder.Entity("SistemaVoto.Modelos.TokenVotacion", b =>
                 {
                     b.Property<int>("Id")
@@ -215,14 +240,14 @@ namespace SistemaVotoElectronico.API.Migrations
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<int>("JuntaId")
+                    b.Property<int?>("SeccionId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CandidatoId");
 
-                    b.HasIndex("JuntaId");
+                    b.HasIndex("SeccionId");
 
                     b.ToTable("Votos");
                 });
@@ -286,6 +311,17 @@ namespace SistemaVotoElectronico.API.Migrations
                     b.Navigation("Canton");
                 });
 
+            modelBuilder.Entity("SistemaVoto.Modelos.Seccion", b =>
+                {
+                    b.HasOne("SistemaVoto.Modelos.Parroquia", "Parroquia")
+                        .WithMany()
+                        .HasForeignKey("ParroquiaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Parroquia");
+                });
+
             modelBuilder.Entity("SistemaVoto.Modelos.Votante", b =>
                 {
                     b.HasOne("SistemaVoto.Modelos.Junta", "Junta")
@@ -305,15 +341,13 @@ namespace SistemaVotoElectronico.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SistemaVoto.Modelos.Junta", "Junta")
+                    b.HasOne("SistemaVoto.Modelos.Seccion", "Seccion")
                         .WithMany()
-                        .HasForeignKey("JuntaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SeccionId");
 
                     b.Navigation("Candidato");
 
-                    b.Navigation("Junta");
+                    b.Navigation("Seccion");
                 });
 
             modelBuilder.Entity("SistemaVoto.Modelos.Zona", b =>

@@ -53,20 +53,12 @@ namespace SistemaVotoElectronico.API.Data
 
             // 4. Candidatos
             context.Candidatos.AddRange(
-                new Candidato
-                {
-                    Nombre = "Candidato A",
-                    PartidoPolitico = "Frente UTN",
-                    Dignidad = "Presidente",
-                    FotoUrl = "https://link-a-la-foto.com/a.jpg" // Obligatorio según tu modelo
-                },
-                new Candidato
-                {
-                    Nombre = "Candidato B",
-                    PartidoPolitico = "Alianza Estudiantil",
-                    Dignidad = "Presidente",
-                    FotoUrl = "https://link-a-la-foto.com/b.jpg" // Obligatorio según tu modelo
-                }
+                new Candidato { Nombre = "Candidato A", PartidoPolitico = "Frente UTN", Dignidad = "Presidente", FotoUrl = "..." },
+                new Candidato { Nombre = "Candidato B", PartidoPolitico = "Alianza Estudiantil", Dignidad = "Presidente", FotoUrl = "..." },
+
+    // OPCIONES ESPECIALES
+                new Candidato { Nombre = "Voto en Blanco", PartidoPolitico = "N/A", Dignidad = "N/A", FotoUrl = "blanco.jpg" },
+                new Candidato { Nombre = "Voto Nulo", PartidoPolitico = "N/A", Dignidad = "N/A", FotoUrl = "nulo.jpg" }
             );
 
             context.SaveChanges();

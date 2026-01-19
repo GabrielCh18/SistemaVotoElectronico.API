@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using SistemaVotoElectronico.API.Data; // Solo una vez
-using SistemaVoto.Modelos; // Asegúrate de que la referencia del paso 1 esté lista
+using SistemaVotoElectronico.API.Data;
+using SistemaVoto.Modelos; 
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);

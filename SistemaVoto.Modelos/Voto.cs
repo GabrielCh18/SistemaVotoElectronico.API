@@ -8,9 +8,9 @@ namespace SistemaVoto.Modelos
 
         public int CandidatoId { get; set; }
         public Candidato? Candidato { get; set; }
-
-        public int SeccionId { get; set; }
-        public Seccion? Seccion { get; set; }
+        public DateTime Fecha { get; set; }
+        public int JuntaId { get; set; }
+        public Junta? Junta { get; set; }
 
     }
 }

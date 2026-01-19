@@ -24,8 +24,4 @@
 		<ProjectReference Include="..\SistemaVoto.Modelos\SistemaVoto.Modelos.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Folder Include="Controllers\" />
-	</ItemGroup>
-
 </Project>

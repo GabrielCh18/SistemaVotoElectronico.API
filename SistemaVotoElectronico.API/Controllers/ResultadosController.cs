@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using SistemaVotoElectronico.API.Data;
 using SistemaVotoElectronico.API.Datos;
-using SistemaVotoElectronico.API.DTOs;
 
 namespace SistemaVotoElectronico.API.Controllers
 {

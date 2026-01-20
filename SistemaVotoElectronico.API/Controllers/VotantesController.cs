@@ -16,19 +16,48 @@ namespace SistemaVotoElectronico.API.Controllers
             _context = context;
         }
 
-        // 1. BUSCAR POR CÉDULA: Lo usa el Jefe de Junta al recibir al ciudadano
+        // --- NUEVO: REGISTRAR VOTANTE DESDE SWAGGER ---
+        [HttpPost("registrar")]
+        public async Task<ActionResult<Votante>> RegistrarVotante(Votante votante)
+        {
+            // 1. Validar que la cédula no exista ya
+            if (await _context.Votantes.AnyAsync(v => v.Cedula == votante.Cedula))
+            {
+                return BadRequest("Ya existe un votante con esa cédula.");
+            }
+
+            // 2. Validar que la Junta exista (Si mandas JuntaId = 999 y no existe, explota)
+            var juntaExiste = await _context.Juntas.AnyAsync(j => j.Id == votante.JuntaId);
+            if (!juntaExiste)
+            {
+                return BadRequest($"No existe la Junta con ID {votante.JuntaId}. Asegúrate de crear Juntas primero.");
+            }
+
+            // 3. Limpiamos datos por si acaso (para que no diga que ya votó al crearse)
+            votante.YaVoto = false;
+            votante.Junta = null; // Evitamos conflictos de referencia circular
+
+            _context.Votantes.Add(votante);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetVotante", new { cedula = votante.Cedula }, votante);
+        }
+        // ---------------------------------------------
+
+        // 1. BUSCAR POR CÉDULA
         [HttpGet("buscar/{cedula}")]
         public async Task<ActionResult<Votante>> GetVotante(string cedula)
         {
             var votante = await _context.Votantes
                 .Include(v => v.Junta)
+                .ThenInclude(j => j.Zona) // Traemos también la Zona para saber dónde votar
                 .FirstOrDefaultAsync(v => v.Cedula == cedula);
 
             if (votante == null) return NotFound("Ciudadano no encontrado.");
             return Ok(votante);
         }
 
-        // 2. GENERAR CÓDIGO ÚNICO: El Jefe de Junta valida presencia y genera el token
+        // 2. GENERAR CÓDIGO ÚNICO
         [HttpPost("generar-acceso/{votanteId}")]
         public async Task<IActionResult> GenerarAcceso(int votanteId)
         {
@@ -36,14 +65,13 @@ namespace SistemaVotoElectronico.API.Controllers
             if (votante == null) return NotFound("Votante no existe.");
             if (votante.YaVoto) return BadRequest("El ciudadano ya votó.");
 
-            // Generar un código aleatorio de 6 dígitos
+            // Generar código de 6 dígitos
             string codigo = Guid.NewGuid().ToString().Substring(0, 6).ToUpper();
 
             var token = new TokenVotacion
             {
                 VotanteId = votanteId,
                 CodigoUnico = codigo,
-                // CAMBIO AQUÍ: Usar UtcNow para evitar el Error 500 en Postgres
                 FechaExpiracion = DateTime.UtcNow.AddMinutes(15),
                 FueUsado = false
             };

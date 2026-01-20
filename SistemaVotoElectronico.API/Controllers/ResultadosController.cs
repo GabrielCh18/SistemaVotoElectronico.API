@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaVotoElectronico.API.Data;
+using SistemaVotoElectronico.API.Datos;
+using SistemaVotoElectronico.API.DTOs;
 
 namespace SistemaVotoElectronico.API.Controllers
 {
@@ -15,55 +17,63 @@ namespace SistemaVotoElectronico.API.Controllers
             _context = context;
         }
 
-        [HttpGet("conteo-detallado")]
-        public async Task<IActionResult> GetResultadosDetallados()
+        // GET: api/Resultados/5
+        // El número '5' sería el ID del Proceso Electoral (ej: Elecciones 2026)
+        [HttpGet("{procesoId}")]
+        public async Task<ActionResult<ResumenGeneral>> GetResultados(int procesoId)
         {
-            var totalVotos = await _context.Votos.CountAsync();
+            // 1. Verificamos que el proceso exista
+            var proceso = await _context.ProcesoElectorales
+                                        .Include(p => p.Candidatos)
+                                        .FirstOrDefaultAsync(p => p.Id == procesoId);
 
-            // Obtenemos la lista de todos los candidatos con sus conteos
-            var todosLosResultados = await _context.Candidatos
-                .Select(c => new
-                {
-                    Nombre = c.Nombre,
-                    EsEspecial = c.Nombre.Contains("Voto"), // Detecta si es Blanco o Nulo
-                    Votos = _context.Votos.Count(v => v.CandidatoId == c.Id),
-                    Porcentaje = totalVotos > 0
-                        ? (double)_context.Votos.Count(v => v.CandidatoId == c.Id) / totalVotos * 100
-                        : 0
-                })
-                .ToListAsync();
+            if (proceso == null) return NotFound("Proceso electoral no encontrado.");
 
-            // Separamos para mayor claridad en el reporte
-            var votosPorCandidatos = todosLosResultados.Where(r => !r.EsEspecial).ToList();
-            var votosNulosYBlancos = todosLosResultados.Where(r => r.EsEspecial).ToList();
+            // 2. Traemos todos los votos de ESA elección
+            var votos = await _context.Votos
+                                      .Where(v => v.ProcesoElectoralId == procesoId)
+                                      .ToListAsync();
 
-            return Ok(new
+            int totalVotos = votos.Count;
+            var respuesta = new ResumenGeneral
             {
-                ResumenGlobal = new
-                {
-                    TotalEmitidos = totalVotos,
-                    VotosValidos = votosPorCandidatos.Sum(v => v.Votos),
-                    VotosNulos = votosNulosYBlancos.FirstOrDefault(v => v.Nombre == "Voto Nulo")?.Votos ?? 0,
-                    VotosBlancos = votosNulosYBlancos.FirstOrDefault(v => v.Nombre == "Voto en Blanco")?.Votos ?? 0
-                },
-                DetalleCandidatos = votosPorCandidatos
-            });
-        }
-        [HttpGet("por-provincia/{provinciaId}")]
-        public async Task<IActionResult> GetResultadosPorProvincia(int provinciaId)
-        {
-            var resultados = await _context.Candidatos
-                .Select(c => new
-                {
-                    Candidato = c.Nombre,
-                    VotosEnProvincia = _context.Votos
-                        .Where(v => v.CandidatoId == c.Id &&
-                                    v.Junta.Zona.Parroquia.Canton.ProvinciaId == provinciaId)
-                        .Count()
-                })
-                .ToListAsync();
+                TotalVotos = totalVotos,
+                Estado = proceso.Activo ? "En Curso" : "Finalizado"
+            };
 
-            return Ok(resultados);
+            // 3. Magia: Contamos votos por candidato
+            foreach (var candidato in proceso.Candidatos)
+            {
+                int votosCandidato = votos.Count(v => v.CandidatoId == candidato.Id);
+                double porcentaje = totalVotos > 0 ? (double)votosCandidato / totalVotos * 100 : 0;
+
+                respuesta.Resultados.Add(new ResultadoVotacion
+                {
+                    Candidato = candidato.Nombre,
+                    Partido = candidato.PartidoPolitico,
+                    FotoUrl = candidato.FotoUrl ?? "", // Si es null, ponemos vacío
+                    CantidadVotos = votosCandidato,
+                    Porcentaje = Math.Round(porcentaje, 2)
+                });
+            }
+
+            // 4. Agregamos votos nulos/blancos (donde CandidatoId es null)
+            int nulos = votos.Count(v => v.CandidatoId == null);
+            if (nulos > 0)
+            {
+                respuesta.Resultados.Add(new ResultadoVotacion
+                {
+                    Candidato = "Nulos / Blancos",
+                    Partido = "Sistema",
+                    CantidadVotos = nulos,
+                    Porcentaje = totalVotos > 0 ? Math.Round((double)nulos / totalVotos * 100, 2) : 0
+                });
+            }
+
+            // Ordenamos: El ganador va primero
+            respuesta.Resultados = respuesta.Resultados.OrderByDescending(r => r.CantidadVotos).ToList();
+
+            return respuesta;
         }
     }
 }

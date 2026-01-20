@@ -16,32 +16,44 @@ namespace SistemaVotoElectronico.API.Controllers
             _context = context;
         }
 
+        // --- CORRECCIÓN AQUÍ ---
+        // Agregamos 'int procesoElectoralId' para saber a qué elección pertenece el voto
         [HttpPost("registrar-voto")]
-public async Task<IActionResult> RegistrarVoto(string cedula, string codigo, int candidatoId)
-{
-    // 1. Validaciones de Token y Votante (Igual que antes)
-    var token = await _context.Tokens.FirstOrDefaultAsync(t => t.CodigoUnico == codigo && !t.FueUsado);
-    if (token == null) return BadRequest("Código inválido.");
+        public async Task<IActionResult> RegistrarVoto(string cedula, string codigo, int candidatoId, int procesoElectoralId)
+        {
+            // 1. Validaciones de Token
+            var token = await _context.Tokens
+                .FirstOrDefaultAsync(t => t.CodigoUnico == codigo && !t.FueUsado);
 
-    var votante = await _context.Votantes.FirstOrDefaultAsync(v => v.Cedula == cedula);
-    if (votante == null || votante.YaVoto) return BadRequest("El ciudadano no puede votar.");
+            if (token == null) return BadRequest("Código inválido o ya usado.");
+            if (token.FechaExpiracion < DateTime.UtcNow) return BadRequest("El código ha expirado.");
 
-    // 2. Creamos el voto capturando la Junta del votante
-    var nuevoVoto = new Voto
-    {
-        CandidatoId = candidatoId,
-        Fecha = DateTime.UtcNow,
-        JuntaId = votante.JuntaId // <-- AQUÍ capturamos la ubicación automáticamente
-    };
+            // 2. Validaciones de Votante
+            var votante = await _context.Votantes.FirstOrDefaultAsync(v => v.Cedula == cedula);
 
-    // 3. Marcamos como usado y guardamos
-    votante.YaVoto = true;
-    token.FueUsado = true;
+            // Verificamos que el votante exista y que el token sea SUYO
+            if (votante == null) return BadRequest("Ciudadano no encontrado.");
+            if (token.VotanteId != votante.Id) return BadRequest("Este código no pertenece a esta cédula.");
+            if (votante.YaVoto) return BadRequest("El ciudadano ya votó.");
 
-    _context.Votos.Add(nuevoVoto);
-    await _context.SaveChangesAsync();
+            // 3. Crear el voto
+            var nuevoVoto = new Voto
+            {
+                CandidatoId = candidatoId,
+                ProcesoElectoralId = procesoElectoralId, // <--- ¡ESTO FALTABA!
+                Fecha = DateTime.UtcNow,
+                JuntaId = votante.JuntaId,
+                HashIntegridad = Guid.NewGuid().ToString() // Generamos un hash simple por ahora
+            };
 
-    return Ok("Voto registrado con éxito.");
-}
+            // 4. Actualizar estados
+            votante.YaVoto = true;
+            token.FueUsado = true;
+
+            _context.Votos.Add(nuevoVoto);
+            await _context.SaveChangesAsync();
+
+            return Ok("✅ Voto registrado con éxito.");
+        }
     }
 }

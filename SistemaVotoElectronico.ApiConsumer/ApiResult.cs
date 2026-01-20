@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SistemaVotoElectronico.ApiConsumer
+﻿namespace SistemaVotoElectronico.ApiConsumer
 {
-    internal class ApiResult
+    public class ApiResult<T>
     {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public T Data { get; set; }
     }
 }

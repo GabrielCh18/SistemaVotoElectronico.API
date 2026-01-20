@@ -1,4 +1,6 @@
 <Solution>
   <Project Path="SistemaVoto.Modelos/SistemaVoto.Modelos.csproj" Id="70127a31-d860-402a-bb74-69eedb3e2392" />
   <Project Path="SistemaVotoElectronico.API/SistemaVotoElectronico.API.csproj" />
+  <Project Path="SistemaVotoElectronico.ApiConsumer/SistemaVotoElectronico.ApiConsumer.csproj" Id="ac8cb67b-be67-47db-a52b-cef124b444eb" />
+  <Project Path="SistemaVotoElectronico.MVC/SistemaVotoElectronico.MVC.csproj" Id="f4350a28-b536-4b8a-91eb-40a128c39787" />
 </Solution>

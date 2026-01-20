@@ -1,0 +1,42 @@
+﻿@model SistemaVotoElectronico.API.Datos.ResumenGeneral
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4">📊 Resultados en Tiempo Real</h1>
+
+    @if (Model != null && Model.Resultados != null)
+    {
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    Total de Votos Escrutados: <strong>@Model.TotalVotos</strong> | Estado: <strong>@Model.Estado</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            @foreach (var item in Model.Resultados)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <img src="@item.FotoUrl" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;" alt="@item.Candidato">
+                            <h5 class="card-title">@item.Candidato</h5>
+                            <p class="text-muted">@item.Partido</p>
+
+                            <h2 class="display-4">@item.Porcentaje%</h2>
+                            <p>@item.CantidadVotos votos</p>
+
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: @item.Porcentaje.ToString().Replace(",", ".")%" aria-valuenow="@item.Porcentaje" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning">No hay datos disponibles o hubo un error de conexión.</div>
+    }
+</div>

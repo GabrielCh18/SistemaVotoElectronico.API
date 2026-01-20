@@ -1,7 +1,14 @@
+using SistemaVotoElectronico.ApiConsumer; // <--- 1. IMPORTANTE: Agregar este using arriba
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// --- NUEVO: CONEXIÓN CON LA API ---
+// Esto permite que el MVC pueda usar tu ApiService
+builder.Services.AddHttpClient<ApiService>();
+// ----------------------------------
 
 var app = builder.Build();
 

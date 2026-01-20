@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SistemaVoto.Modelos\SistemaVoto.Modelos.csproj" />
+  </ItemGroup>
+
 </Project>

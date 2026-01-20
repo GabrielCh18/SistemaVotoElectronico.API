@@ -1,21 +1,24 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+Ôªøusing Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using SistemaVotoElectronico.API.Data;
-using SistemaVoto.Modelos; 
+using SistemaVoto.Modelos;
 
+// Hack para timestamps de Postgres
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
-// --- CONFIGURACI”N DE BASE DE DATOS ---
-var connectionString = builder.Configuration.GetConnectionString("VotoElectronicoConnection");
+// --- CONFIGURACI√ìN DE BASE DE DATOS (MODO "NUCLEAR") ---
+// Aqu√≠ ponemos la conexi√≥n directa para obligar a que funcione
+var connectionString = "Host=dpg-d5nc34mmcj7s73cjiap0-a.oregon-postgres.render.com;Database=sistemavoto_db;Username=sistemavoto_db_user;Password=GxYUpmlLIz58crgtri1ZFVonWuurINFt;SSL Mode=Require;Trust Server Certificate=true";
 
 builder.Services.AddDbContext<VotoContext>(options =>
     options.UseNpgsql(connectionString));
 
-// --- CONFIGURACI”N JWT ---
+// --- CONFIGURACI√ìN JWT ---
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
@@ -31,10 +34,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// --- CONFIGURACI”N SWAGGER ---
+// --- CONFIGURACI√ìN SWAGGER ---
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Sistema Voto ElectrÛnico API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Sistema Voto Electr√≥nico API", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -70,7 +73,7 @@ builder.Services.AddCors(options => {
 
 var app = builder.Build();
 
-// --- PIPELINE DE LA APLICACI”N ---
+// --- PIPELINE DE LA APLICACI√ìN ---
 
 app.UseCors();
 
@@ -86,8 +89,7 @@ app.UseStaticFiles();
 
 app.MapControllers();
 
-// ValidaciÛn de conexiÛn al arrancar
-// ValidaciÛn de conexiÛn e inicializaciÛn de datos
+// Validaci√≥n de conexi√≥n e inicializaci√≥n de datos al arrancar
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -96,14 +98,15 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<VotoContext>();
 
         // --- LLAMADA AL INICIALIZADOR ---
+        // Esto crear√° datos de prueba si la base est√° vac√≠a
         DbInitializer.Initialize(context);
 
-        Console.WriteLine("Base de datos inicializada con Èxito.");
+        Console.WriteLine("‚úÖ Base de datos inicializada y conectada con √©xito.");
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Error al inicializar la base de datos.");
+        logger.LogError(ex, "‚ùå Error al inicializar la base de datos.");
     }
 }
 

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SistemaVotoElectronico.ApiConsumer;
-using SistemaVotoElectronico.API.Datos; // Necesitamos el DTO de resultados (copia la clase ResultadoVotacion en tu proyecto MVC si no la tienes)
+using SistemaVoto.Modelos; // <--- ¡Este es el cambio importante!
 
 namespace SistemaVotoElectronico.MVC.Controllers
 {

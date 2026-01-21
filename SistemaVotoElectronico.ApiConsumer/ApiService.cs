@@ -71,5 +71,43 @@ namespace SistemaVotoElectronico.ApiConsumer
                 return new ApiResult<string> { Success = false, Message = ex.Message };
             }
         }
+        // ---------------------------------------------------------
+        // METODO PARA BORRAR (DELETE)
+        // ---------------------------------------------------------
+        public async Task<ApiResult<string>> DeleteAsync(string endpoint)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}{endpoint}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Si salió bien (200 OK), devolvemos éxito
+                    return new ApiResult<string>
+                    {
+                        Success = true,
+                        Message = "Eliminado correctamente"
+                    };
+                }
+                else
+                {
+                    // Si falló, leemos qué pasó
+                    var error = await response.Content.ReadAsStringAsync();
+                    return new ApiResult<string>
+                    {
+                        Success = false,
+                        Message = error
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<string>
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
+        }
     }
 }

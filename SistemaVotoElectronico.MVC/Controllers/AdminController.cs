@@ -13,17 +13,19 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
-        // 1. LISTAR CANDIDATOS (PROTEGIDO)
+        // ---------------------------------------------------------
+        // 1. LISTAR CANDIDATOS (Con Seguridad 🔒)
+        // ---------------------------------------------------------
         public async Task<IActionResult> Candidatos()
         {
-            // --- CANDADO 🔒 ---
+            // --- CANDADO: Si no es admin, lo mandamos al Login ---
             if (HttpContext.Session.GetString("UsuarioAdmin") == null)
             {
-                return RedirectToAction("Login", "Account"); // ¡Fuera de aquí!
+                return RedirectToAction("Login", "Account");
             }
-            // ------------------
+            // -----------------------------------------------------
 
-            // Pedimos la lista a la API (Asumimos proceso #1)
+            // Si pasa el candado, cargamos la lista
             var respuesta = await _apiService.GetListAsync<Candidato>("Candidatos/por-proceso/1");
 
             if (!respuesta.Success)
@@ -35,28 +37,34 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(respuesta.Data);
         }
 
-        // 2. PANTALLA DE CREAR (PROTEGIDO)
+        // ---------------------------------------------------------
+        // 2. CREAR CANDIDATO - VISTA (Con Seguridad 🔒)
+        // ---------------------------------------------------------
         public IActionResult CrearCandidato()
         {
-            // --- CANDADO 🔒 ---
-            if (HttpContext.Session.GetString("UsuarioAdmin") == null) return RedirectToAction("Login", "Account");
+            // Candado
+            if (HttpContext.Session.GetString("UsuarioAdmin") == null)
+                return RedirectToAction("Login", "Account");
 
             return View();
         }
 
-        // 3. GUARDAR CANDIDATO (PROTEGIDO)
+        // ---------------------------------------------------------
+        // 3. CREAR CANDIDATO - GUARDAR (Con Seguridad 🔒)
+        // ---------------------------------------------------------
         [HttpPost]
         public async Task<IActionResult> CrearCandidato(Candidato candidato)
         {
-            // --- CANDADO 🔒 ---
-            if (HttpContext.Session.GetString("UsuarioAdmin") == null) return RedirectToAction("Login", "Account");
+            // Candado
+            if (HttpContext.Session.GetString("UsuarioAdmin") == null)
+                return RedirectToAction("Login", "Account");
 
             // Forzamos el proceso #1
             candidato.ProcesoElectoralId = 1;
 
             if (!ModelState.IsValid) return View(candidato);
 
-            // Enviamos a la API
+            // Guardamos en la API
             var respuesta = await _apiService.PostAsync("Candidatos", candidato);
 
             if (respuesta.Success)
@@ -70,11 +78,14 @@ namespace SistemaVotoElectronico.MVC.Controllers
             }
         }
 
-        // 4. ELIMINAR CANDIDATO (PROTEGIDO Y FUNCIONAL)
+        // ---------------------------------------------------------
+        // 4. ELIMINAR CANDIDATO (Con Seguridad 🔒)
+        // ---------------------------------------------------------
         public async Task<IActionResult> Eliminar(int id)
         {
-            // --- CANDADO 🔒 ---
-            if (HttpContext.Session.GetString("UsuarioAdmin") == null) return RedirectToAction("Login", "Account");
+            // Candado
+            if (HttpContext.Session.GetString("UsuarioAdmin") == null)
+                return RedirectToAction("Login", "Account");
 
             // Llamamos a la API para borrar
             var respuesta = await _apiService.DeleteAsync($"Candidatos/{id}");

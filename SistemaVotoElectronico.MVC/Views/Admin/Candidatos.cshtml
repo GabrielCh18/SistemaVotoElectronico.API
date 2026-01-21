@@ -8,7 +8,12 @@
         </a>
     </div>
 
-    <table class="table table-hover shadow-sm">
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <table class="table table-hover shadow-sm align-middle">
         <thead class="table-dark">
             <tr>
                 <th>Foto</th>
@@ -25,18 +30,20 @@
                     <td>
                         @if (!string.IsNullOrEmpty(item.FotoUrl))
                         {
-                            <img src="@item.FotoUrl" class="rounded-circle" width="40" height="40" style="object-fit:cover" />
+                            <img src="@item.FotoUrl" class="rounded-circle border" width="50" height="50" style="object-fit:cover" />
                         }
                         else
                         {
-                            <span>📷</span>
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:50px; height:50px;">📷</div>
                         }
                     </td>
-                    <td>@item.Nombre</td>
+                    <td class="fw-bold">@item.Nombre</td>
                     <td>@item.PartidoPolitico</td>
-                    <td>@item.Dignidad</td>
+                    <td><span class="badge bg-info text-dark">@item.Dignidad</span></td>
                     <td>
-                        <button class="btn btn-sm btn-danger disabled">🗑️ Eliminar</button>
+                        <a asp-action="Eliminar" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Seguro que quieres borrar a @item.Nombre? Esta acción no se puede deshacer.');">
+                            🗑️ Eliminar
+                        </a>
                     </td>
                 </tr>
             }

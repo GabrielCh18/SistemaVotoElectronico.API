@@ -42,5 +42,39 @@ namespace SistemaVotoElectronico.API.Controllers
 
             return CreatedAtAction("GetCandidatosPorProceso", new { procesoId = candidato.ProcesoElectoralId }, candidato);
         }
+        // DELETE: api/Candidatos/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCandidato(int id)
+        {
+            var candidato = await _context.Candidatos.FindAsync(id);
+            if (candidato == null)
+            {
+                return NotFound("El candidato no existe.");
+            }
+
+            // 1. BUSCAMOS LOS VOTOS DE ESTE CANDIDATO
+            var votos = _context.Votos.Where(v => v.CandidatoId == id).ToList();
+
+            // 2. LOS BORRAMOS PRIMERO (Limpieza)
+            if (votos.Any())
+            {
+                _context.Votos.RemoveRange(votos);
+            }
+
+            // 3. AHORA SÍ, BORRAMOS AL CANDIDATO
+            _context.Candidatos.Remove(candidato);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Si falla por otra cosa, avisamos
+                return BadRequest("Error crítico al borrar: " + ex.InnerException?.Message ?? ex.Message);
+            }
+
+            return NoContent();
+        }
     }
 }

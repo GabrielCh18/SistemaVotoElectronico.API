@@ -1,30 +1,32 @@
-﻿using SistemaVotoElectronico.ApiConsumer; // <--- Referencia a tu servicio
-using System.Net.Http; // <--- Necesario para el manejo de certificados
+﻿using SistemaVotoElectronico.ApiConsumer; // <--- Tu servicio API
+using System.Net.Http; // <--- Para el certificado SSL
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// 1. Agregar servicios al contenedor (MVC)
 builder.Services.AddControllersWithViews();
 
-// -----------------------------------------------------------------------------
-// 🔌 CONEXIÓN CON LA API (MODO DESARROLLO)
-// -----------------------------------------------------------------------------
-// Aquí inyectamos el ApiService, pero le agregamos una configuración especial
-// para que confíe en el certificado de seguridad local (localhost) y no de error.
+// 2. Configurar la Sesión (Memoria para el Login de Admin)
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Tiempo de vida de la sesión
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// 3. Conexión con la API (Modo Desarrollo - Ignorar SSL)
 builder.Services.AddHttpClient<ApiService>()
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
         ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
     });
-// -----------------------------------------------------------------------------
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 4. Configurar el pipeline de solicitudes HTTP
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -35,6 +37,10 @@ app.UseRouting();
 
 app.UseAuthorization();
 
+// 5. ¡IMPORTANTE! Activar la Sesión (Debe ir antes de los controladores)
+app.UseSession();
+
+// 6. Configurar la ruta por defecto
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

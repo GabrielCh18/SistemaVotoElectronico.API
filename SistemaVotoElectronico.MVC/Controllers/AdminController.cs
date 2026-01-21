@@ -13,11 +13,17 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
-        // 1. LISTAR CANDIDATOS
-        // GET: Admin/Candidatos
+        // 1. LISTAR CANDIDATOS (PROTEGIDO)
         public async Task<IActionResult> Candidatos()
         {
-            // Pedimos la lista a la API (Asumimos proceso #1 por ahora)
+            // --- CANDADO 🔒 ---
+            if (HttpContext.Session.GetString("UsuarioAdmin") == null)
+            {
+                return RedirectToAction("Login", "Account"); // ¡Fuera de aquí!
+            }
+            // ------------------
+
+            // Pedimos la lista a la API (Asumimos proceso #1)
             var respuesta = await _apiService.GetListAsync<Candidato>("Candidatos/por-proceso/1");
 
             if (!respuesta.Success)
@@ -29,17 +35,23 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(respuesta.Data);
         }
 
-        // 2. PANTALLA DE CREAR (GET)
+        // 2. PANTALLA DE CREAR (PROTEGIDO)
         public IActionResult CrearCandidato()
         {
+            // --- CANDADO 🔒 ---
+            if (HttpContext.Session.GetString("UsuarioAdmin") == null) return RedirectToAction("Login", "Account");
+
             return View();
         }
 
-        // 3. GUARDAR CANDIDATO (POST)
+        // 3. GUARDAR CANDIDATO (PROTEGIDO)
         [HttpPost]
         public async Task<IActionResult> CrearCandidato(Candidato candidato)
         {
-            // Forzamos algunos datos por defecto para facilitar
+            // --- CANDADO 🔒 ---
+            if (HttpContext.Session.GetString("UsuarioAdmin") == null) return RedirectToAction("Login", "Account");
+
+            // Forzamos el proceso #1
             candidato.ProcesoElectoralId = 1;
 
             if (!ModelState.IsValid) return View(candidato);
@@ -58,12 +70,20 @@ namespace SistemaVotoElectronico.MVC.Controllers
             }
         }
 
-        // 4. ELIMINAR CANDIDATO
+        // 4. ELIMINAR CANDIDATO (PROTEGIDO Y FUNCIONAL)
         public async Task<IActionResult> Eliminar(int id)
         {
-            // Ojo: Necesitarás crear este endpoint en tu ApiService si no existe un DeleteAsync,
-            // pero por ahora usemos Post o Get si tu API lo permite, o dejémoslo pendiente.
-            // Para simplificar hoy, solo haremos Listar y Crear.
+            // --- CANDADO 🔒 ---
+            if (HttpContext.Session.GetString("UsuarioAdmin") == null) return RedirectToAction("Login", "Account");
+
+            // Llamamos a la API para borrar
+            var respuesta = await _apiService.DeleteAsync($"Candidatos/{id}");
+
+            if (!respuesta.Success)
+            {
+                TempData["Error"] = "No se pudo eliminar: " + respuesta.Message;
+            }
+
             return RedirectToAction("Candidatos");
         }
     }

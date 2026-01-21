@@ -1,14 +1,22 @@
-using SistemaVotoElectronico.ApiConsumer; // <--- 1. IMPORTANTE: Agregar este using arriba
+﻿using SistemaVotoElectronico.ApiConsumer; // <--- Referencia a tu servicio
+using System.Net.Http; // <--- Necesario para el manejo de certificados
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// --- NUEVO: CONEXI�N CON LA API ---
-// Esto permite que el MVC pueda usar tu ApiService
-builder.Services.AddHttpClient<ApiService>();
-// ----------------------------------
+// -----------------------------------------------------------------------------
+// 🔌 CONEXIÓN CON LA API (MODO DESARROLLO)
+// -----------------------------------------------------------------------------
+// Aquí inyectamos el ApiService, pero le agregamos una configuración especial
+// para que confíe en el certificado de seguridad local (localhost) y no de error.
+builder.Services.AddHttpClient<ApiService>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+    });
+// -----------------------------------------------------------------------------
 
 var app = builder.Build();
 

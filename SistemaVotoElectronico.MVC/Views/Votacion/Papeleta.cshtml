@@ -1,0 +1,35 @@
+﻿@model List<SistemaVoto.Modelos.Candidato>
+
+<div class="container text-center mt-4">
+    <h1 class="mb-2">🗳️ Elija a su Presidente</h1>
+    <p class="text-muted mb-5">Haga clic en el botón "Votar" de su candidato preferido.</p>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">@ViewBag.Error</div>
+    }
+
+    <div class="row justify-content-center">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow hover-effect">
+                    <img src="@item.FotoUrl" class="card-img-top p-3 rounded-circle mx-auto d-block" style="width: 200px; height: 200px; object-fit: cover;" alt="@item.Nombre">
+                    <div class="card-body">
+                        <h3 class="card-title">@item.Nombre</h3>
+                        <h5 class="text-primary">@item.PartidoPolitico</h5>
+                        <p class="card-text text-muted">@item.Dignidad</p>
+                    </div>
+                    <div class="card-footer bg-white border-0 pb-4">
+                        <form asp-action="Votar" method="post">
+                            <input type="hidden" name="candidatoId" value="@item.Id" />
+                            <button type="submit" class="btn btn-outline-success btn-lg w-100 rounded-pill">
+                                ✅ Votar por @item.Nombre.Split(' ')[0]
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

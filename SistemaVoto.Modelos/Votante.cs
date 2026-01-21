@@ -10,6 +10,6 @@
 
         // Relación con su lugar de votación
         public int JuntaId { get; set; }
-        public Junta Junta { get; set; }
+        public Junta? Junta { get; set; }
     }
 }

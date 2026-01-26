@@ -15,7 +15,6 @@ WORKDIR /src
 COPY ["SistemaVotoElectronico.MVC/SistemaVotoElectronico.MVC.csproj", "SistemaVotoElectronico.MVC/"]
 COPY ["SistemaVoto.Modelos/SistemaVoto.Modelos.csproj", "SistemaVoto.Modelos/"]
 COPY ["SistemaVotoElectronico.ApiConsumer/SistemaVotoElectronico.ApiConsumer.csproj", "SistemaVotoElectronico.ApiConsumer/"]
-COPY ["SistemaVotoElectronico.API/SistemaVotoElectronico.API.csproj", "SistemaVotoElectronico.API/"]
 RUN dotnet restore "./SistemaVotoElectronico.MVC/SistemaVotoElectronico.MVC.csproj"
 COPY . .
 WORKDIR "/src/SistemaVotoElectronico.MVC"

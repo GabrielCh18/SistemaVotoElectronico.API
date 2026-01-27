@@ -100,5 +100,18 @@ namespace SistemaVotoElectronico.API.Controllers
             await _context.SaveChangesAsync();
             return Ok(junta);
         }
+
+        [HttpDelete("provincias/{id}")]
+        public async Task<IActionResult> DeleteProvincia(int id)
+        {
+            var provincia = await _context.Provincias.FindAsync(id);
+            if (provincia == null) return NotFound("Provincia no encontrada");
+
+            // Opcional: Validar si tiene cantones hijos antes de borrar
+            // pero para limpiar rápido, lo haremos directo:
+            _context.Provincias.Remove(provincia);
+            await _context.SaveChangesAsync();
+            return Ok("Eliminado");
+        }
     }
 }

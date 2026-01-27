@@ -1,24 +1,69 @@
-﻿@{
+﻿@model List<SistemaVoto.Modelos.Provincia>
+
+@{
     ViewData["Title"] = "Gestión de Ubicaciones";
 }
 
 <div class="container mt-4">
-    <h2>🗺️ Gestión de Territorio y Mesas</h2>
-    <hr />
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5>1. Provincias</h5>
-                    <a asp-action="CrearProvincia" class="btn btn-primary btn-sm">Crear Provincia</a>
-                </div>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>🗺️ Gestión de Territorio</h2>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">📍 Provincias</h5>
+            <a asp-action="CrearProvincia" class="btn btn-light btn-sm">➕ Nueva Provincia</a>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center">
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Count > 0)
+                    {
+                        @foreach (var provincia in Model)
+                        {
+                            <tr>
+                                <td>@provincia.Id</td>
+                                <td><strong>@provincia.Nombre</strong></td>
+                                <td>
+                                    <a asp-action="EliminarProvincia" asp-route-id="@provincia.Id"
+                                       class="btn btn-danger btn-sm"
+                                       onclick="return confirm('¿Seguro que quieres borrar @provincia.Nombre?');">
+                                        🗑️ Eliminar
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">No hay provincias registradas.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card text-center mb-3">
                 <div class="card-body">
-                    <h5>2. Cantones</h5>
-                    <a asp-action="CrearCanton" class="btn btn-info btn-sm">Crear Cantón</a>
+                    <h5>Cantones</h5>
+                    <p class="text-muted small">Gestionar ciudades</p>
+                    <a asp-action="CrearCanton" class="btn btn-outline-primary btn-block">Crear Cantón</a>
                 </div>
             </div>
         </div>

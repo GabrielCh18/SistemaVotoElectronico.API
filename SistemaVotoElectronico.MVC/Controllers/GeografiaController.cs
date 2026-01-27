@@ -15,10 +15,29 @@ namespace SistemaVotoElectronico.MVC.Controllers
         }
 
         // VISTA PRINCIPAL (MENU)
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            if (HttpContext.Session.GetString("UsuarioAdmin") == null) return RedirectToAction("Login", "Account");
-            return View();
+            if (HttpContext.Session.GetString("UsuarioAdmin") == null)
+                return RedirectToAction("Login", "Account");
+
+            // Pedimos las provincias a la API para mostrarlas en la tabla
+            var respuesta = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
+
+            // Si hay datos los mandamos, si no, una lista vacía
+            return View(respuesta.Success ? respuesta.Data : new List<Provincia>());
+        }
+
+        // 2. AGREGAMOS LA ACCIÓN DE ELIMINAR
+        public async Task<IActionResult> EliminarProvincia(int id)
+        {
+            var respuesta = await _apiService.DeleteAsync($"Geografia/provincias/{id}");
+
+            if (!respuesta.Success)
+            {
+                TempData["Error"] = "No se pudo eliminar: " + respuesta.Message;
+            }
+
+            return RedirectToAction("Index");
         }
 
         // ------------------------------------------------
@@ -29,6 +48,8 @@ namespace SistemaVotoElectronico.MVC.Controllers
         [HttpPost]
         public async Task<IActionResult> CrearProvincia(Provincia provincia)
         {
+            ModelState.Remove("Cantones");
+
             if (!ModelState.IsValid) return View(provincia);
 
             var response = await _apiService.PostAsync("Geografia/provincias", provincia);
@@ -51,6 +72,9 @@ namespace SistemaVotoElectronico.MVC.Controllers
         [HttpPost]
         public async Task<IActionResult> CrearCanton(Canton canton)
         {
+            ModelState.Remove("Provincia");
+            ModelState.Remove("Parroquias");
+
             var response = await _apiService.PostAsync("Geografia/cantones", canton);
             if (response.Success) return RedirectToAction("Index");
 

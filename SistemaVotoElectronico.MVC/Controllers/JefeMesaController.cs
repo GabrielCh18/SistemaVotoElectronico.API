@@ -14,112 +14,81 @@ namespace SistemaVotoElectronico.MVC.Controllers
         }
 
         // ==========================================
-        // 1. LOGIN DEL JEFE (LA PUERTA DE ENTRADA)
+        // LOGIN (Igual que antes)
         // ==========================================
         public IActionResult Login()
         {
-            // Si ya está adentro, lo mandamos directo al trabajo
-            if (HttpContext.Session.GetString("JefeLogueado") != null)
-            {
-                return RedirectToAction("Index");
-            }
+            if (HttpContext.Session.GetString("JefeLogueado") != null) return RedirectToAction("Index");
             return View();
         }
 
         [HttpPost]
         public async Task<IActionResult> Login(string cedula)
         {
-            if (string.IsNullOrEmpty(cedula))
-            {
-                ViewBag.Error = "⚠️ Debes ingresar tu número de cédula.";
-                return View();
-            }
+            if (string.IsNullOrEmpty(cedula)) { ViewBag.Error = "⚠️ Ingresa la cédula."; return View(); }
 
-            // 1. Buscamos al ciudadano en la base de datos
             var response = await _apiService.GetAsync<Votante>($"Votantes/buscar/{cedula}");
-
-            if (!response.Success || response.Data == null)
-            {
-                ViewBag.Error = "❌ No encontramos esa cédula en el sistema.";
-                return View();
-            }
+            if (!response.Success || response.Data == null) { ViewBag.Error = "❌ Cédula no encontrada."; return View(); }
 
             var jefe = response.Data;
+            if (!jefe.EsJefe) { ViewBag.Error = "⛔ No tienes permisos de Jefe de Junta."; return View(); }
 
-            // 2. VERIFICAMOS LA INSIGNIA (El check que creamos antes)
-            if (!jefe.EsJefe)
-            {
-                ViewBag.Error = "⛔ Lo sentimos, usted NO está registrado como Jefe de Junta.";
-                return View();
-            }
-
-            // 3. ¡ÉXITO! Guardamos sus datos en sesión para que el sistema lo recuerde
-            HttpContext.Session.SetString("JefeLogueado", jefe.Nombre + " " + jefe.Apellido);
-            HttpContext.Session.SetInt32("JuntaIdJefe", jefe.JuntaId); // Guardamos qué mesa cuida
+            HttpContext.Session.SetString("JefeLogueado", $"{jefe.Nombre} {jefe.Apellido}");
+            HttpContext.Session.SetInt32("JuntaIdJefe", jefe.JuntaId);
 
             return RedirectToAction("Index");
         }
 
         public IActionResult Salir()
         {
-            HttpContext.Session.Clear(); // Borramos la sesión
+            HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
 
         // ==========================================
-        // 2. EL PANEL DE CONTROL (PROTEGIDO)
+        // 2. PANEL DE CONTROL (AHORA CON BÚSQUEDA)
         // ==========================================
-        public IActionResult Index()
+        [HttpGet]
+        public async Task<IActionResult> Index(string? cedulaBusqueda)
         {
-            // SEGURIDAD: Si no se ha logueado, para afuera
-            if (HttpContext.Session.GetString("JefeLogueado") == null)
-            {
-                return RedirectToAction("Login");
-            }
+            if (HttpContext.Session.GetString("JefeLogueado") == null) return RedirectToAction("Login");
 
             ViewBag.JefeNombre = HttpContext.Session.GetString("JefeLogueado");
-            return View();
+            int? juntaDelJefe = HttpContext.Session.GetInt32("JuntaIdJefe");
+
+            // Si no hay búsqueda, mostramos la pantalla limpia
+            if (string.IsNullOrEmpty(cedulaBusqueda)) return View();
+
+            // BUSCAMOS AL VOTANTE
+            var response = await _apiService.GetAsync<Votante>($"Votantes/buscar/{cedulaBusqueda}");
+
+            if (response.Success && response.Data != null)
+            {
+                var votante = response.Data;
+
+                // Pasamos datos clave a la vista para decidir qué color mostrar
+                ViewBag.EsDeMiMesa = (votante.JuntaId == juntaDelJefe);
+                ViewBag.MesaCorrecta = votante.Junta?.Numero; // Para decirle a cuál ir si se equivocó
+                ViewBag.RecintoCorrecto = votante.Junta?.Zona?.Nombre;
+
+                return View(votante); // Enviamos el Votante encontrado a la vista
+            }
+            else
+            {
+                ViewBag.Error = "❌ No se encontró ningún ciudadano con esa cédula.";
+                return View();
+            }
         }
 
         // ==========================================
-        // 3. GENERAR CÓDIGO (ACCIÓN PRINCIPAL)
+        // 3. GENERAR CÓDIGO (SOLO SI EL JEFE CONFIRMA)
         // ==========================================
         [HttpPost]
         public async Task<IActionResult> Generar(string cedulaVotante)
         {
-            // Validamos que siga logueado
             if (HttpContext.Session.GetString("JefeLogueado") == null) return RedirectToAction("Login");
 
-            int? juntaDelJefe = HttpContext.Session.GetInt32("JuntaIdJefe");
-
-            if (string.IsNullOrEmpty(cedulaVotante))
-            {
-                ViewBag.Error = "⚠️ Ingrese la cédula del votante.";
-                ViewBag.JefeNombre = HttpContext.Session.GetString("JefeLogueado");
-                return View("Index");
-            }
-
-            // 1. Buscamos al votante que quiere votar
-            var responseVotante = await _apiService.GetAsync<Votante>($"Votantes/buscar/{cedulaVotante}");
-
-            if (!responseVotante.Success)
-            {
-                ViewBag.Error = "❌ Votante no encontrado.";
-                ViewBag.JefeNombre = HttpContext.Session.GetString("JefeLogueado");
-                return View("Index");
-            }
-
-            var votante = responseVotante.Data;
-
-            // 2. REGLA DE ORO: ¿El votante pertenece a MI mesa?
-            if (votante.JuntaId != juntaDelJefe)
-            {
-                ViewBag.Error = $"⛔ ALERTA: Este votante NO pertenece a su mesa. Él debe votar en la Mesa {votante.Junta?.Numero} del recinto {votante.Junta?.Zona?.Nombre}.";
-                ViewBag.JefeNombre = HttpContext.Session.GetString("JefeLogueado");
-                return View("Index");
-            }
-
-            // 3. Si todo está bien, generamos el código
+            // Llamamos a la API para generar (Tu API ya valida si ya votó, etc.)
             var response = await _apiService.PostWithResponseAsync<RespuestaCodigo, RespuestaCodigo>(
                 $"Votantes/generar-codigo/{cedulaVotante}",
                 new RespuestaCodigo()
@@ -127,23 +96,25 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             if (response.Success && response.Data != null)
             {
-                ViewBag.CodigoGenerado = response.Data.Codigo;
-                ViewBag.NombreVotante = response.Data.Nombre;
-                ViewBag.Mensaje = "✅ CÓDIGO GENERADO";
+                // ÉXITO: Mostramos el código
+                TempData["CodigoGenerado"] = response.Data.Codigo;
+                TempData["NombreVotante"] = response.Data.Nombre;
+                return RedirectToAction("Index"); // Recargamos para limpiar
             }
             else
             {
-                ViewBag.Error = "❌ " + response.Message;
+                // ERROR: Lo mostramos
+                ViewBag.ErrorGenerar = response.Message;
+                ViewBag.JefeNombre = HttpContext.Session.GetString("JefeLogueado");
+                return View("Index");
             }
-
-            ViewBag.JefeNombre = HttpContext.Session.GetString("JefeLogueado");
-            return View("Index");
         }
+    }
 
-        public class RespuestaCodigo
-        {
-            public string Codigo { get; set; } = string.Empty;
-            public string Nombre { get; set; } = string.Empty;
-        }
+    // Tu clase auxiliar
+    public class RespuestaCodigo
+    {
+        public string Codigo { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
     }
 }

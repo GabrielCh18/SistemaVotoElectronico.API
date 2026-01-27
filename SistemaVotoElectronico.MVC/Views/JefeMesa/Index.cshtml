@@ -1,62 +1,143 @@
-﻿@{
-    ViewData["Title"] = "Panel de Control de Mesa";
+﻿@model SistemaVoto.Modelos.Votante
+@{
+    ViewData["Title"] = "Panel de Mesa";
 }
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center bg-white p-3 rounded shadow-sm border mb-4">
         <div class="d-flex align-items-center">
-            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; font-size: 1.5rem;">
-                👮‍♂️
-            </div>
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; font-size: 1.5rem;">👮‍♂️</div>
             <div>
-                <h5 class="mb-0 fw-bold text-dark">Panel de Control</h5>
-                <small class="text-muted">Jefe de Junta: <strong>@ViewBag.JefeNombre</strong></small>
+                <h5 class="mb-0 fw-bold">Jefe de Mesa</h5>
+                <small class="text-muted">Usuario: <strong>@ViewBag.JefeNombre</strong></small>
             </div>
         </div>
         <a asp-action="Salir" class="btn btn-outline-danger btn-sm">Cerrar Sesión</a>
     </div>
 
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-dark text-white text-center py-3">
-                    <h4 class="mb-0">🔍 Validar Votante</h4>
+    @if (TempData["CodigoGenerado"] != null)
+    {
+        <div class="alert alert-success text-center py-5 shadow mb-4">
+            <h2 class="alert-heading fw-bold">✅ ¡CÓDIGO GENERADO!</h2>
+            <p class="mb-2">Entregue este código a <strong>@TempData["NombreVotante"]</strong></p>
+            <h1 class="display-1 fw-bold text-success my-3 bg-white d-inline-block px-5 rounded border border-success">
+                @TempData["CodigoGenerado"]
+            </h1>
+            <p class="mb-0 text-muted mt-2">⚠️ Anótelo, desaparecerá al recargar.</p>
+        </div>
+    }
+
+    @if (ViewBag.ErrorGenerar != null)
+    {
+        <div class="alert alert-danger text-center">@ViewBag.ErrorGenerar</div>
+    }
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">🔍 1. Buscar Ciudadano</h5>
                 </div>
-                <div class="card-body p-5 text-center">
-
-                    <p class="mb-4 text-muted">
-                        Solicite la cédula física al ciudadano. Si pertenece a esta mesa, el sistema generará el código de votación.
-                    </p>
-
-                    @if (ViewBag.Error != null)
-                    {
-                        <div class="alert alert-danger shadow-sm text-start">
-                            <h5 class="alert-heading fw-bold">⛔ ACCESO DENEGADO</h5>
-                            <p class="mb-0">@ViewBag.Error</p>
-                        </div>
-                    }
-
-                    @if (ViewBag.Mensaje != null)
-                    {
-                        <div class="alert alert-success shadow-sm py-4 border-success">
-                            <h5 class="alert-heading fw-bold">✅ CIUDADANO HABILITADO</h5>
-                            <hr>
-                            <p class="mb-2">Entregue este código a <strong>@ViewBag.NombreVotante</strong>:</p>
-                            <h1 class="display-2 fw-bold text-success my-3" style="letter-spacing: 5px;">@ViewBag.CodigoGenerado</h1>
-                            <p class="mb-0 text-muted small">Este código es de un solo uso.</p>
-                        </div>
-                    }
-
-                    <form asp-action="Generar" method="post" class="mt-4">
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text bg-light border-end-0">🆔</span>
-                            <input type="text" name="cedulaVotante" class="form-control border-start-0" placeholder="Ingrese Cédula del Votante" required autocomplete="off" maxlength="10">
-                            <button class="btn btn-primary px-4 fw-bold" type="submit">VALIDAR ➡️</button>
+                <div class="card-body">
+                    <form asp-action="Index" method="get">
+                        <div class="input-group mb-3">
+                            <input type="text" name="cedulaBusqueda" class="form-control form-control-lg" placeholder="Cédula" required maxlength="10" value="@Model?.Cedula">
+                            <button class="btn btn-primary" type="submit">Buscar</button>
                         </div>
                     </form>
-
+                    <p class="text-muted small">Solicite la cédula física y verifique la foto antes de proceder.</p>
                 </div>
             </div>
+        </div>
+
+        <div class="col-md-7">
+            @if (Model != null)
+            {
+                @if (ViewBag.EsDeMiMesa == false)
+                {
+                    <div class="card border-danger shadow">
+                        <div class="card-header bg-danger text-white">
+                            <h4 class="mb-0">⛔ MESA O RECINTO INCORRECTO</h4>
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="text-danger mb-3" style="font-size: 3rem;">📍❌</div>
+
+                            <h3 class="text-danger fw-bold">@Model.Nombre @Model.Apellido</h3>
+                            <p class="lead mb-4">Este ciudadano <strong>NO VOTA EN ESTA MESA</strong>.</p>
+
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <p class="mb-1 text-muted small text-uppercase">Debe dirigirse a:</p>
+
+                                    <h2 class="fw-bold text-dark">
+                                        Mesa #@(ViewBag.MesaCorrecta ?? "Desconocida")
+                                    </h2>
+
+                                    <h5 class="text-primary mt-2">
+                                        🏟️ Recinto: @(ViewBag.RecintoCorrecto ?? "Sin asignar")
+                                    </h5>
+
+                                    <span class="badge bg-secondary mt-2">
+                                        Mesa @(Model.Junta?.Genero == "M" ? "Masculina" : "Femenina")
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                }
+                // CASO 2: YA VOTÓ
+                else if (Model.YaVoto)
+                {
+                    <div class="card border-warning shadow">
+                        <div class="card-header bg-warning text-dark">
+                            <h4 class="mb-0">⚠️ YA SUFRAGÓ</h4>
+                        </div>
+                        <div class="card-body text-center">
+                            <h3 class="text-dark">@Model.Nombre @Model.Apellido</h3>
+                            <div class="alert alert-warning mt-3">
+                                <strong>ALERTA:</strong> El sistema registra que esta persona ya emitió su voto.
+                                <br />No se puede generar un nuevo código.
+                            </div>
+                        </div>
+                    </div>
+                }
+                // CASO 3: TODO CORRECTO -> BOTÓN DE GENERAR
+                else
+                {
+                    <div class="card border-success shadow-lg">
+                        <div class="card-header bg-success text-white">
+                            <h4 class="mb-0">✅ HABILITADO PARA VOTAR</h4>
+                        </div>
+                        <div class="card-body text-center">
+                            <h2 class="fw-bold">@Model.Nombre @Model.Apellido</h2>
+                            <p class="text-muted">C.I. @Model.Cedula</p>
+
+                            <div class="alert alert-info">
+                                <strong>Confirmación:</strong> El ciudadano pertenece a esta mesa y aún no ha votado.
+                            </div>
+
+                            <form asp-action="Generar" method="post">
+                                <input type="hidden" name="cedulaVotante" value="@Model.Cedula" />
+                                <button type="submit" class="btn btn-success btn-lg w-100 py-3 fw-bold shadow">
+                                    🔑 GENERAR CÓDIGO DE VOTACIÓN
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            }
+            else if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">@ViewBag.Error</div>
+            }
+            else
+            {
+                <div class="alert alert-light text-center border dashed p-5">
+                    <h2 class="text-muted">👈</h2>
+                    <p class="text-muted">Busque una cédula para ver la información.</p>
+                </div>
+            }
         </div>
     </div>
 </div>

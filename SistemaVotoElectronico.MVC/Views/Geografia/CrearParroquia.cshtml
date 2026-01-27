@@ -1,0 +1,38 @@
+﻿@model SistemaVoto.Modelos.Parroquia
+
+<div class="container mt-4">
+    <div class="card shadow-sm" style="max-width: 600px; margin: auto;">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">🏠 Nueva Parroquia</h4>
+        </div>
+        <div class="card-body">
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">@ViewBag.Error</div>
+            }
+
+            <form asp-action="CrearParroquia" method="post">
+
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold">Pertenece al Cantón:</label>
+                    <select asp-for="CantonId" class="form-control" asp-items="ViewBag.Cantones">
+                        <option value="">-- Seleccione un Cantón --</option>
+                    </select>
+                    <span asp-validation-for="CantonId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold">Nombre de la Parroquia:</label>
+                    <input asp-for="Nombre" class="form-control" placeholder="Ej: San Francisco" />
+                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-success">Guardar Parroquia</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

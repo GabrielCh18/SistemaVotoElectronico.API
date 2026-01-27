@@ -85,6 +85,44 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(canton);
         }
 
+        public async Task<IActionResult> CrearParroquia()
+        {
+            // Pedimos la lista de Cantones para el menú desplegable
+            var cantones = await _apiService.GetListAsync<Canton>("Geografia/cantones");
+
+            // Creamos el SelectList. El 'Id' es lo que se guarda, 'Nombre' lo que se ve.
+            ViewBag.Cantones = new SelectList(cantones.Data, "Id", "Nombre");
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CrearParroquia(Parroquia parroquia)
+        {
+            // Ignoramos validaciones de navegación
+            ModelState.Remove("Canton");
+            ModelState.Remove("Zonas");
+
+            if (!ModelState.IsValid)
+            {
+                // Si falla, hay que recargar la lista de cantones
+                var cantones = await _apiService.GetListAsync<Canton>("Geografia/cantones");
+                ViewBag.Cantones = new SelectList(cantones.Data, "Id", "Nombre");
+                return View(parroquia);
+            }
+
+            var response = await _apiService.PostAsync("Geografia/parroquias", parroquia);
+
+            if (response.Success) return RedirectToAction("Index");
+
+            // Si la API devuelve error
+            ViewBag.Error = response.Message;
+            var cantonesRetry = await _apiService.GetListAsync<Canton>("Geografia/cantones");
+            ViewBag.Cantones = new SelectList(cantonesRetry.Data, "Id", "Nombre");
+
+            return View(parroquia);
+        }
+
         // ------------------------------------------------
         // 3. CREAR JUNTA (Ejemplo final de la cadena)
         // Para simplificar, aquí asumimos que sabes el ID de la Zona o

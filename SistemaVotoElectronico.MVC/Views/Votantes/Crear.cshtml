@@ -68,6 +68,19 @@
                     </div>
                 </div>
 
+                <div class="card bg-warning bg-opacity-10 border-warning mb-3">
+                    <div class="card-body py-2">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" asp-for="EsJefe" id="checkJefe" style="cursor: pointer;">
+                            <label class="form-check-label fw-bold text-dark" for="checkJefe" style="cursor: pointer;">
+                                👮 ¿Esta persona será Jefe de Junta?
+                            </label>
+                        </div>
+                        <small class="text-muted fst-italic">
+                            Si activas esto, este usuario tendrá permisos para validar votantes en la Mesa seleccionada.
+                        </small>
+                    </div>
+                </div>
                 <div class="d-grid gap-2 mt-3">
                     <button type="submit" class="btn btn-primary btn-lg">💾 Registrar Ciudadano</button>
                     <a asp-controller="Home" asp-action="Index" class="btn btn-light">Volver al Inicio</a>

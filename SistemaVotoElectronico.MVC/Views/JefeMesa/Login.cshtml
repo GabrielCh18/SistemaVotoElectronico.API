@@ -1,0 +1,55 @@
+﻿@{
+    Layout = null; // Sin menú arriba, para que se vea como una pantalla de acceso única
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Acceso Jefe de Junta</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card text-center">
+        <div class="mb-4">
+            <span style="font-size: 4rem;">👮‍♂️</span>
+        </div>
+        <h3 class="fw-bold text-dark mb-2">Jefatura de Mesa</h3>
+        <p class="text-muted mb-4">Sistema de Control Electoral</p>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger text-start small">@ViewBag.Error</div>
+        }
+
+        <form asp-action="Login" method="post">
+            <div class="form-floating mb-3 text-start">
+                <input type="text" name="cedula" class="form-control" id="floatingInput" placeholder="Cédula" required autocomplete="off" maxlength="10">
+                <label for="floatingInput">Número de Cédula</label>
+            </div>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg fw-bold">Ingresar</button>
+                <a href="/" class="btn btn-link text-decoration-none text-muted mt-2">← Volver al Inicio</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

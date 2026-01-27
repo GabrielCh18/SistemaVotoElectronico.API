@@ -114,7 +114,7 @@ namespace SistemaVotoElectronico.ApiConsumer
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync(endpoint, data);
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}{endpoint}", data);
 
                 if (response.IsSuccessStatusCode)
                 {

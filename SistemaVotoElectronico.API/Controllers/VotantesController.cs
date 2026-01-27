@@ -81,5 +81,36 @@ namespace SistemaVotoElectronico.API.Controllers
 
             return Ok(new { codigoParaElVotante = codigo });
         }
+
+        [HttpPost("generar-codigo/{cedula}")]
+        public async Task<IActionResult> GenerarCodigoPorCedula(string cedula)
+        {
+            // 1. Buscamos por cédula
+            var votante = await _context.Votantes.FirstOrDefaultAsync(v => v.Cedula == cedula);
+
+            if (votante == null) return NotFound("Votante no existe.");
+            if (votante.YaVoto) return BadRequest("El ciudadano ya votó.");
+
+            // 2. Generamos código
+            string codigo = Guid.NewGuid().ToString().Substring(0, 6).ToUpper();
+
+            var token = new TokenVotacion
+            {
+                VotanteId = votante.Id,
+                CodigoUnico = codigo,
+                FechaExpiracion = DateTime.UtcNow.AddMinutes(15),
+                FueUsado = false
+            };
+
+            _context.Tokens.Add(token);
+            await _context.SaveChangesAsync();
+
+            // 3. Retornamos el objeto JSON exacto que espera la clase RespuestaCodigo del MVC
+            return Ok(new
+            {
+                codigo = codigo,
+                nombre = $"{votante.Nombre} {votante.Apellido}"
+            });
+        }
     }
 }

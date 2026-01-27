@@ -1,5 +1,110 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@model SistemaVoto.Modelos.Junta
+
+<div class="container mt-4">
+    <div class="card shadow-sm" style="max-width: 700px; margin: auto;">
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0">🗳️ Nueva Junta (Mesa)</h4>
+        </div>
+        <div class="card-body">
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">@ViewBag.Error</div>
+            }
+
+            <form asp-action="CrearJunta" method="post">
+
+                <h6 class="text-muted">Ubicación de la Mesa</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label>1. Provincia:</label>
+                        <select id="ddlProvincia" class="form-control" asp-items="ViewBag.Provincias">
+                            <option value="">-- Seleccione --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>2. Cantón:</label>
+                        <select id="ddlCanton" class="form-control" disabled><option>-- Esperando... --</option></select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>3. Parroquia:</label>
+                        <select id="ddlParroquia" class="form-control" disabled><option>-- Esperando... --</option></select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold text-primary">4. Zona / Recinto:</label>
+                        <select asp-for="ZonaId" id="ddlZona" class="form-control" disabled>
+                            <option value="">-- Esperando... --</option>
+                        </select>
+                        <span asp-validation-for="ZonaId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <hr />
+                <h6 class="text-muted">Detalles de la Mesa</h6>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold">Número de Mesa:</label>
+                        <input asp-for="Numero" type="number" class="form-control" placeholder="Ej: 1" />
+                        <span asp-validation-for="Numero" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold">Género:</label>
+                        <select asp-for="Genero" class="form-control">
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-success">Guardar Junta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // 1. Provincia -> Carga Cantón
+            $("#ddlProvincia").change(function () {
+                cargarCombo('/Geografia/ObtenerCantones', { provinciaId: $(this).val() }, $("#ddlCanton"), $("#ddlParroquia"), $("#ddlZona"));
+            });
+
+            // 2. Cantón -> Carga Parroquia
+            $("#ddlCanton").change(function () {
+                cargarCombo('/Geografia/ObtenerParroquias', { cantonId: $(this).val() }, $("#ddlParroquia"), $("#ddlZona"), null);
+            });
+
+            // 3. Parroquia -> Carga ZONA (Target final)
+            $("#ddlParroquia").change(function () {
+                cargarCombo('/Geografia/ObtenerZonas', { parroquiaId: $(this).val() }, $("#ddlZona"), null, null);
+            });
+
+            // Función genérica para no repetir código
+            function cargarCombo(url, dataParam, $target, $nextTarget1, $nextTarget2) {
+                // Limpiar targets siguientes
+                $target.empty().append('<option>Cargando...</option>').prop("disabled", true);
+                if($nextTarget1) $nextTarget1.empty().append('<option>-- Esperando... --</option>').prop("disabled", true);
+                if($nextTarget2) $nextTarget2.empty().append('<option>-- Esperando... --</option>').prop("disabled", true);
+
+                // Si hay valor seleccionado, llamamos al servidor
+                if (Object.values(dataParam)[0]) {
+                    $.getJSON(url, dataParam, function (data) {
+                        $target.empty().append('<option value="">-- Seleccione --</option>');
+                        $.each(data, function (i, item) {
+                            $target.append($('<option>', { value: item.id, text: item.nombre }));
+                        });
+                        $target.prop("disabled", false);
+                    });
+                } else {
+                    $target.empty().append('<option>-- Esperando... --</option>');
+                }
+            }
+        });
+    </script>
 }

@@ -173,25 +173,45 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(zona);
         }
 
-        // ------------------------------------------------
-        // 3. CREAR JUNTA (Ejemplo final de la cadena)
-        // Para simplificar, aquí asumimos que sabes el ID de la Zona o
-        // podrías hacer una carga en cascada con JavaScript, pero para 
-        // empezar simple, cargaremos TODAS las zonas.
-        // ------------------------------------------------
+        [HttpGet]
+        public async Task<JsonResult> ObtenerZonas(int parroquiaId)
+        {
+            var respuesta = await _apiService.GetListAsync<Zona>($"Geografia/zonas/por-parroquia/{parroquiaId}");
+            return Json(respuesta.Data);
+        }
+
+        // B. Pantalla Crear Junta
         public async Task<IActionResult> CrearJunta()
         {
-            // Nota: En un sistema real harías combos en cascada (Prov->Canton->Parr->Zona)
-            // Aquí cargaremos solo Zonas para simplificar el código inicial.
-            // Necesitarías crear un endpoint "Geografia/zonas" que traiga todas si quieres listarlas todas,
-            // o buscar primero la parroquia. 
-            // POR AHORA: Asumiremos que creas una API que traiga todas las zonas o usas IDs directos.
-            // Para no complicarte con JavaScript ahora mismo, lo dejaré simple:
-
+            // Carga inicial: Solo nivel 1 (Provincias)
+            var provincias = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
+            ViewBag.Provincias = new SelectList(provincias.Data, "Id", "Nombre");
             return View();
         }
 
-        // NOTA: Para las Parroquias y Zonas la lógica es idéntica a Cantón,
-        // solo cambia qué lista cargas (Cantones para Parroquias, Parroquias para Zonas).
+        [HttpPost]
+        public async Task<IActionResult> CrearJunta(Junta junta)
+        {
+            // Ignoramos la validación del objeto padre (Zona)
+            ModelState.Remove("Zona");
+
+            if (!ModelState.IsValid)
+            {
+                // Si falla, recargamos Provincias
+                var provincias = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
+                ViewBag.Provincias = new SelectList(provincias.Data, "Id", "Nombre");
+                return View(junta);
+            }
+
+            var response = await _apiService.PostAsync("Geografia/juntas", junta);
+
+            if (response.Success) return RedirectToAction("Index");
+
+            // Error
+            ViewBag.Error = response.Message;
+            var provs = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
+            ViewBag.Provincias = new SelectList(provs.Data, "Id", "Nombre");
+            return View(junta);
+        }
     }
 }

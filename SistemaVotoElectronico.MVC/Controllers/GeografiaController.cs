@@ -87,27 +87,33 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
         public async Task<IActionResult> CrearParroquia()
         {
-            // Pedimos la lista de Cantones para el menú desplegable
-            var cantones = await _apiService.GetListAsync<Canton>("Geografia/cantones");
-
-            // Creamos el SelectList. El 'Id' es lo que se guarda, 'Nombre' lo que se ve.
-            ViewBag.Cantones = new SelectList(cantones.Data, "Id", "Nombre");
+            // CAMBIO: Ahora cargamos PROVINCIAS, no Cantones directamente
+            var provincias = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
+            ViewBag.Provincias = new SelectList(provincias.Data, "Id", "Nombre");
 
             return View();
+        }
+        [HttpGet]
+        public async Task<JsonResult> ObtenerCantones(int provinciaId)
+        {
+            // Llamamos a la API que ya creamos antes: "api/Geografia/cantones/por-provincia/{id}"
+            var respuesta = await _apiService.GetListAsync<Canton>($"Geografia/cantones/por-provincia/{provinciaId}");
+
+            // Devolvemos los datos en formato JSON para que JavaScript los entienda
+            return Json(respuesta.Data);
         }
 
         [HttpPost]
         public async Task<IActionResult> CrearParroquia(Parroquia parroquia)
         {
-            // Ignoramos validaciones de navegación
             ModelState.Remove("Canton");
             ModelState.Remove("Zonas");
 
             if (!ModelState.IsValid)
             {
-                // Si falla, hay que recargar la lista de cantones
-                var cantones = await _apiService.GetListAsync<Canton>("Geografia/cantones");
-                ViewBag.Cantones = new SelectList(cantones.Data, "Id", "Nombre");
+                // Si falla, recargamos las PROVINCIAS (para que no se rompa la vista)
+                var provincias = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
+                ViewBag.Provincias = new SelectList(provincias.Data, "Id", "Nombre");
                 return View(parroquia);
             }
 
@@ -115,10 +121,9 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             if (response.Success) return RedirectToAction("Index");
 
-            // Si la API devuelve error
             ViewBag.Error = response.Message;
-            var cantonesRetry = await _apiService.GetListAsync<Canton>("Geografia/cantones");
-            ViewBag.Cantones = new SelectList(cantonesRetry.Data, "Id", "Nombre");
+            var provs = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
+            ViewBag.Provincias = new SelectList(provs.Data, "Id", "Nombre");
 
             return View(parroquia);
         }

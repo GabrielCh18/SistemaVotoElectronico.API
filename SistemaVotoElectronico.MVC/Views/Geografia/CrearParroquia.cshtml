@@ -15,15 +15,22 @@
             <form asp-action="CrearParroquia" method="post">
 
                 <div class="form-group mb-3">
-                    <label class="font-weight-bold">Pertenece al Cantón:</label>
-                    <select asp-for="CantonId" class="form-control" asp-items="ViewBag.Cantones">
-                        <option value="">-- Seleccione un Cantón --</option>
+                    <label class="font-weight-bold">1. Seleccione Provincia:</label>
+                    <select id="ddlProvincia" class="form-control" asp-items="ViewBag.Provincias">
+                        <option value="">-- Seleccione una Provincia --</option>
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold">2. Seleccione Cantón:</label>
+                    <select asp-for="CantonId" id="ddlCanton" class="form-control" disabled>
+                        <option value="">-- Primero seleccione Provincia --</option>
                     </select>
                     <span asp-validation-for="CantonId" class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label class="font-weight-bold">Nombre de la Parroquia:</label>
+                    <label class="font-weight-bold">3. Nombre de la Parroquia:</label>
                     <input asp-for="Nombre" class="form-control" placeholder="Ej: San Francisco" />
                     <span asp-validation-for="Nombre" class="text-danger"></span>
                 </div>
@@ -36,3 +43,41 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Cuando cambie la Provincia...
+            $("#ddlProvincia").change(function () {
+                var provinciaId = $(this).val();
+                var $cantonSelect = $("#ddlCanton");
+
+                // Limpiar el combo de cantones
+                $cantonSelect.empty();
+                $cantonSelect.append('<option value="">-- Cargando cantones... --</option>');
+                $cantonSelect.prop("disabled", true);
+
+                if (provinciaId) {
+                    // Hacemos la petición AJAX al servidor
+                    $.getJSON('/Geografia/ObtenerCantones', { provinciaId: provinciaId }, function (data) {
+                        $cantonSelect.empty();
+                        $cantonSelect.append('<option value="">-- Seleccione un Cantón --</option>');
+
+                        // Llenamos el combo con los datos recibidos
+                        $.each(data, function (i, item) {
+                            $cantonSelect.append($('<option>', {
+                                value: item.id,
+                                text: item.nombre
+                            }));
+                        });
+
+                        // Habilitamos el combo
+                        $cantonSelect.prop("disabled", false);
+                    });
+                } else {
+                    $cantonSelect.append('<option value="">-- Primero seleccione Provincia --</option>');
+                }
+            });
+        });
+    </script>
+}

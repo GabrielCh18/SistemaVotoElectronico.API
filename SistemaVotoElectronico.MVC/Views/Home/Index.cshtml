@@ -1,8 +1,79 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model SistemaVoto.Modelos.Votante
+@{
+    ViewData["Title"] = "Consulta tu Lugar de Votación";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center mt-4">
+    <h1 class="display-5 fw-bold text-primary">🗳️ Consulta tu Lugar de Votación</h1>
+    <p class="lead text-muted">Ingresa tu número de cédula para conocer tu recinto y mesa electoral.</p>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+                <form asp-action="Index" method="get" class="d-flex gap-2">
+                    <input type="text" name="cedula" class="form-control form-control-lg"
+                           placeholder="Ej: 1001234567"
+                           value="@ViewBag.CedulaBuscada" required maxlength="10" onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
+                    <button type="submit" class="btn btn-primary btn-lg px-4">🔍 Consultar</button>
+                </form>
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-warning mt-3 mb-0 text-center">
+                        @ViewBag.Error
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (Model != null)
+        {
+            <div class="card border-success shadow-lg">
+                <div class="card-header bg-success text-white text-center">
+                    <h4 class="mb-0">✅ ¡Estás Empadronado!</h4>
+                </div>
+                <div class="card-body text-center">
+                    <h3 class="fw-bold text-dark">@Model.Nombre @Model.Apellido</h3>
+                    <p class="text-muted mb-4">C.I. @Model.Cedula</p>
+
+                    <hr />
+
+                    <div class="row text-start mt-4">
+                        <div class="col-6 mb-3">
+                            <h6 class="text-muted text-uppercase small">Recinto Electoral (Zona)</h6>
+                            <h5 class="fw-bold text-primary">@Model.Junta?.Zona?.Nombre</h5>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h6 class="text-muted text-uppercase small">Dirección</h6>
+                            <h5 class="text-dark">@Model.Junta?.Zona?.Direccion</h5>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-muted text-uppercase small">Número de Mesa</h6>
+                            <h2 class="fw-bold text-danger">Mesa @Model.Junta?.Numero</h2>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-muted text-uppercase small">Género de Mesa</h6>
+                            <h5 class="text-dark">@(Model.Junta?.Genero == "M" ? "Masculino" : "Femenino")</h5>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-4">
+                        <strong>Estado:</strong>
+                        @if (Model.YaVoto)
+                        {
+                            <span class="badge bg-success">YA VOTÓ</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">PENDIENTE DE VOTO</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
 </div>

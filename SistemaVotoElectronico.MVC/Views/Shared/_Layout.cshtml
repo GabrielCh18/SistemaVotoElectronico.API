@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -19,6 +21,7 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
+
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Inicio</a>
                         </li>
@@ -31,24 +34,38 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Resultados" asp-action="Index">📊 Resultados</a>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a class="nav-link text-danger fw-bold" asp-controller="Admin" asp-action="Candidatos">
-                                ⚙️ ADMIN (PRUEBA)
-                            </a>
-                        </li>
+                        @if (Context.Session.GetString("UsuarioAdmin") != null)
+                        {
+                            <li class="nav-item border-start ms-2 ps-2">
+                                <span class="nav-link disabled text-muted small">| ADMIN:</span>
+                            </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Geografia" asp-action="Index">📍 Gestión Ubicaciones</a>
-                        </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-primary fw-bold" asp-controller="Votantes" asp-action="Crear">👥 Registrar Votante</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Geografia" asp-action="Index">📍 Ubicaciones</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-danger fw-bold" asp-controller="Admin" asp-action="Candidatos">⚙️ Panel Admin</a>
+                            </li>
+                        }
 
                         <li class="nav-item ms-auto">
-                            <a class="nav-link text-danger fw-bold border border-danger rounded px-3" asp-controller="Admin" asp-action="Candidatos">
-                                ⚙️ Admin
-                            </a>
+                            @if (Context.Session.GetString("UsuarioAdmin") != null)
+                            {
+                                <a class="nav-link text-danger border border-danger rounded px-3" asp-controller="Account" asp-action="Logout">
+                                    🚪 Salir
+                                </a>
+                            }
+                            else
+                            {
+                                <a class="nav-link text-success fw-bold border border-success rounded px-3" asp-controller="Account" asp-action="Login">
+                                    🔑 Ingreso Admin
+                                </a>
+                            }
                         </li>
                     </ul>
                 </div>

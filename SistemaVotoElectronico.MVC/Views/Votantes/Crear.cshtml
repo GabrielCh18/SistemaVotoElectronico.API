@@ -1,0 +1,118 @@
+﻿@model SistemaVoto.Modelos.Votante
+
+<div class="container mt-4">
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">👤 Registrar Nuevo Votante</h4>
+        </div>
+        <div class="card-body">
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">@ViewBag.Error</div>
+            }
+
+            <form asp-action="Crear" method="post">
+
+                <h6 class="text-primary border-bottom pb-2">📍 Asignación de Mesa</h6>
+                <div class="row bg-light p-3 rounded mb-3">
+                    <div class="col-md-4 mb-2">
+                        <small>1. Provincia</small>
+                        <select id="ddlProvincia" class="form-control form-control-sm" asp-items="ViewBag.Provincias">
+                            <option value="">Seleccione...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <small>2. Cantón</small>
+                        <select id="ddlCanton" class="form-control form-control-sm" disabled></select>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <small>3. Parroquia</small>
+                        <select id="ddlParroquia" class="form-control form-control-sm" disabled></select>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <small>4. Zona (Recinto)</small>
+                        <select id="ddlZona" class="form-control form-control-sm" disabled></select>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="font-weight-bold text-success">5. Junta (Mesa)</label>
+                        <select asp-for="JuntaId" id="ddlJunta" class="form-control border-success" disabled>
+                            <option value="">-- Seleccione Mesa --</option>
+                        </select>
+                        <span asp-validation-for="JuntaId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <h6 class="text-primary border-bottom pb-2 mt-4">📋 Datos Personales</h6>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Cédula</label>
+                        <input asp-for="Cedula" class="form-control" placeholder="10 dígitos" required />
+                        <span asp-validation-for="Cedula" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Nombres</label>
+                        <input asp-for="Nombre" class="form-control" required />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Apellidos</label>
+                        <input asp-for="Apellido" class="form-control" required />
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary btn-lg">💾 Registrar Ciudadano</button>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-light">Volver al Inicio</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Reutilizamos la lógica de cascada apuntando al GeografiaController
+
+            $("#ddlProvincia").change(function () {
+                cargar('/Geografia/ObtenerCantones', { provinciaId: $(this).val() }, $("#ddlCanton"), [$("#ddlParroquia"), $("#ddlZona"), $("#ddlJunta")]);
+            });
+
+            $("#ddlCanton").change(function () {
+                cargar('/Geografia/ObtenerParroquias', { cantonId: $(this).val() }, $("#ddlParroquia"), [$("#ddlZona"), $("#ddlJunta")]);
+            });
+
+            $("#ddlParroquia").change(function () {
+                cargar('/Geografia/ObtenerZonas', { parroquiaId: $(this).val() }, $("#ddlZona"), [$("#ddlJunta")]);
+            });
+
+            $("#ddlZona").change(function () {
+                cargar('/Geografia/ObtenerJuntas', { zonaId: $(this).val() }, $("#ddlJunta"), []);
+            });
+
+            function cargar(url, data, $target, clearTargets) {
+                // Limpiar siguientes
+                $target.empty().append('<option>Cargando...</option>').prop("disabled", true);
+                clearTargets.forEach(t => t.empty().append('<option>-- Esperando --</option>').prop("disabled", true));
+
+                if (Object.values(data)[0]) {
+                    $.getJSON(url, data, function (items) {
+                        $target.empty().append('<option value="">-- Seleccione --</option>');
+                        $.each(items, function (i, item) {
+                            $target.append($('<option>', { value: item.id, text: item.nombre }));
+                        });
+                        $target.prop("disabled", false);
+                    });
+                }
+            }
+        });
+    </script>
+}

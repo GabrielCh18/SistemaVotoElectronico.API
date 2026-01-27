@@ -213,5 +213,18 @@ namespace SistemaVotoElectronico.MVC.Controllers
             ViewBag.Provincias = new SelectList(provs.Data, "Id", "Nombre");
             return View(junta);
         }
+        [HttpGet]
+        public async Task<JsonResult> ObtenerJuntas(int zonaId)
+        {
+            var respuesta = await _apiService.GetListAsync<Junta>($"Geografia/juntas/por-zona/{zonaId}");
+
+            // Transformamos la data para que muestre "Mesa 1 - Masculino" en el combo
+            var lista = respuesta.Data?.Select(j => new {
+                id = j.Id,
+                nombre = $"Mesa {j.Numero} - {j.Genero}"
+            });
+
+            return Json(lista);
+        }
     }
 }

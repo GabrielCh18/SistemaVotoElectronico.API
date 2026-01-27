@@ -128,6 +128,51 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(parroquia);
         }
 
+        [HttpGet]
+        public async Task<JsonResult> ObtenerParroquias(int cantonId)
+        {
+            var respuesta = await _apiService.GetListAsync<Parroquia>($"Geografia/parroquias/por-canton/{cantonId}");
+            return Json(respuesta.Data);
+        }
+
+        // B. La Vista de Crear Zona
+        public async Task<IActionResult> CrearZona()
+        {
+            // Carga inicial: Solo las Provincias (Nivel 1)
+            var provincias = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
+            ViewBag.Provincias = new SelectList(provincias.Data, "Id", "Nombre");
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CrearZona(Zona zona)
+        {
+            // Ignoramos validaciones de navegación
+            ModelState.Remove("Parroquia");
+            ModelState.Remove("Juntas");
+
+            if (!ModelState.IsValid)
+            {
+                // Si falla, recargamos solo el nivel 1 (Provincias)
+                // El usuario tendrá que seleccionar de nuevo (es difícil mantener el estado de los 3 niveles tras un error)
+                var provincias = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
+                ViewBag.Provincias = new SelectList(provincias.Data, "Id", "Nombre");
+                return View(zona);
+            }
+
+            var response = await _apiService.PostAsync("Geografia/zonas", zona);
+
+            if (response.Success) return RedirectToAction("Index");
+
+            // Manejo de error de API
+            ViewBag.Error = response.Message;
+            var provs = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
+            ViewBag.Provincias = new SelectList(provs.Data, "Id", "Nombre");
+
+            return View(zona);
+        }
+
         // ------------------------------------------------
         // 3. CREAR JUNTA (Ejemplo final de la cadena)
         // Para simplificar, aquí asumimos que sabes el ID de la Zona o

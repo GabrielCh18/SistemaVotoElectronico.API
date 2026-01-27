@@ -1,5 +1,118 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@model SistemaVoto.Modelos.Zona
+
+<div class="container mt-4">
+    <div class="card shadow-sm" style="max-width: 600px; margin: auto;">
+        <div class="card-header bg-warning text-dark">
+            <h4 class="mb-0">📍 Nueva Zona (Recinto)</h4>
+        </div>
+        <div class="card-body">
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">@ViewBag.Error</div>
+            }
+
+            <form asp-action="CrearZona" method="post">
+
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold">1. Provincia:</label>
+                    <select id="ddlProvincia" class="form-control" asp-items="ViewBag.Provincias">
+                        <option value="">-- Seleccione Provincia --</option>
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold">2. Cantón:</label>
+                    <select id="ddlCanton" class="form-control" disabled>
+                        <option value="">-- Primero seleccione Provincia --</option>
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold">3. Parroquia:</label>
+                    <select asp-for="ParroquiaId" id="ddlParroquia" class="form-control" disabled>
+                        <option value="">-- Primero seleccione Cantón --</option>
+                    </select>
+                    <span asp-validation-for="ParroquiaId" class="text-danger"></span>
+                </div>
+
+                <hr />
+
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold">Nombre de la Zona / Recinto:</label>
+                    <input asp-for="Nombre" class="form-control" placeholder="Ej: Colegio Teodoro Gomez" />
+                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold">Dirección:</label>
+                    <input asp-for="Direccion" class="form-control" placeholder="Ej: Av. El Retorno y Sucre" />
+                    <span asp-validation-for="Direccion" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-success">Guardar Zona</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // --- CASCADA 1: PROVINCIA -> CANTÓN ---
+            $("#ddlProvincia").change(function () {
+                var provinciaId = $(this).val();
+                cargarCantones(provinciaId);
+            });
+
+            // --- CASCADA 2: CANTÓN -> PARROQUIA ---
+            $("#ddlCanton").change(function () {
+                var cantonId = $(this).val();
+                cargarParroquias(cantonId);
+            });
+
+            function cargarCantones(provinciaId) {
+                var $cantonSelect = $("#ddlCanton");
+                var $parroquiaSelect = $("#ddlParroquia"); // También limpiamos el nieto
+
+                // Resetear combos
+                $cantonSelect.empty().append('<option value="">Cargando...</option>').prop("disabled", true);
+                $parroquiaSelect.empty().append('<option value="">-- Primero seleccione Cantón --</option>').prop("disabled", true);
+
+                if (provinciaId) {
+                    $.getJSON('/Geografia/ObtenerCantones', { provinciaId: provinciaId }, function (data) {
+                        $cantonSelect.empty().append('<option value="">-- Seleccione Cantón --</option>');
+                        $.each(data, function (i, item) {
+                            $cantonSelect.append($('<option>', { value: item.id, text: item.nombre }));
+                        });
+                        $cantonSelect.prop("disabled", false);
+                    });
+                } else {
+                    $cantonSelect.empty().append('<option value="">-- Primero seleccione Provincia --</option>');
+                }
+            }
+
+            function cargarParroquias(cantonId) {
+                var $parroquiaSelect = $("#ddlParroquia");
+
+                $parroquiaSelect.empty().append('<option value="">Cargando...</option>').prop("disabled", true);
+
+                if (cantonId) {
+                    $.getJSON('/Geografia/ObtenerParroquias', { cantonId: cantonId }, function (data) {
+                        $parroquiaSelect.empty().append('<option value="">-- Seleccione Parroquia --</option>');
+                        $.each(data, function (i, item) {
+                            $parroquiaSelect.append($('<option>', { value: item.id, text: item.nombre }));
+                        });
+                        $parroquiaSelect.prop("disabled", false);
+                    });
+                } else {
+                    $parroquiaSelect.empty().append('<option value="">-- Primero seleccione Cantón --</option>');
+                }
+            }
+        });
+    </script>
 }

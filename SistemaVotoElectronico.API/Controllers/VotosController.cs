@@ -37,13 +37,16 @@ namespace SistemaVotoElectronico.API.Controllers
             if (votante.YaVoto) return BadRequest("El ciudadano ya votó.");
 
             // 3. Crear el voto
+            // ... dentro del método de guardar voto ...
+
             var nuevoVoto = new Voto
             {
+                IdVotante = votante.Id,
                 CandidatoId = candidatoId,
-                ProcesoElectoralId = procesoElectoralId, // <--- ¡ESTO FALTABA!
-                Fecha = DateTime.UtcNow,
-                JuntaId = votante.JuntaId,
-                HashIntegridad = Guid.NewGuid().ToString() // Generamos un hash simple por ahora
+                ProcesoElectoralId = procesoElectoralId,
+
+                // 👇 ASEGÚRATE QUE DIGA ESTO:
+                FechaVoto = DateTime.Now
             };
 
             // 4. Actualizar estados

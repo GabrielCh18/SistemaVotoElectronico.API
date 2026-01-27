@@ -1,0 +1,28 @@
+﻿<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-warning text-dark">
+            <h3>🔑 Panel Jefe de Mesa - Generación de Códigos</h3>
+        </div>
+        <div class="card-body">
+            <form asp-action="Generar" method="post">
+                <div class="input-group mb-3">
+                    <input type="text" name="cedula" class="form-control" placeholder="Ingrese Cédula del Votante" required>
+                    <button class="btn btn-primary" type="submit">Generar Código</button>
+                </div>
+            </form>
+
+            @if (ViewBag.CodigoGenerado != null)
+            {
+                <div class="alert alert-success text-center mt-4">
+                    <h4>Código de Votación:</h4>
+                    <h1 class="display-1 fw-bold">@ViewBag.CodigoGenerado</h1>
+                    <p>Entregue este código al votante. Es válido para un solo uso.</p>
+                </div>
+            }
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">@ViewBag.Error</div>
+            }
+        </div>
+    </div>
+</div>

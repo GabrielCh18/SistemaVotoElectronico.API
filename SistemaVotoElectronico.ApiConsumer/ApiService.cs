@@ -109,5 +109,33 @@ namespace SistemaVotoElectronico.ApiConsumer
                 };
             }
         }
+        // MÉTODO NUEVO: Envía datos y ESPERA UNA RESPUESTA con datos (TResponse)
+        public async Task<ApiResult<TResponse>> PostWithResponseAsync<TRequest, TResponse>(string endpoint, TRequest data)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(endpoint, data);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Aquí SÍ leemos lo que devuelve la API (el JSON con código y nombre)
+                    var resultado = await response.Content.ReadFromJsonAsync<TResponse>();
+                    return new ApiResult<TResponse>
+                    {
+                        Success = true,
+                        Data = resultado
+                    };
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    return new ApiResult<TResponse> { Success = false, Message = error };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<TResponse> { Success = false, Message = ex.Message };
+            }
+        }
     }
 }

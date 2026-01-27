@@ -1,0 +1,21 @@
+﻿@model SistemaVoto.Modelos.ProcesoElectoral
+@{
+    ViewData["Title"] = "Nuevo Proceso Electoral";
+}
+
+<div class="container mt-5">
+    <div class="card shadow border-primary">
+        <div class="card-header bg-primary text-white">
+            <h3>🗳️ Iniciar Nueva Elección</h3>
+        </div>
+        <div class="card-body">
+            <form asp-action="CrearProceso">
+                <div class="mb-3">
+                    <label class="form-label">Nombre del Evento</label>
+                    <input asp-for="Nombre" class="form-control" placeholder="Ej: Elecciones 2026" required />
+                </div>
+                <button type="submit" class="btn btn-success w-100">Crear e Iniciar</button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -13,87 +13,107 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
+        // 🔒 Validar sesión
+        private bool NoEsAdmin() => HttpContext.Session.GetString("UsuarioAdmin") == null;
+
         // ---------------------------------------------------------
-        // 1. LISTAR CANDIDATOS (Con Seguridad 🔒)
+        // 1. LISTAR CANDIDATOS
         // ---------------------------------------------------------
         public async Task<IActionResult> Candidatos()
         {
-            // --- CANDADO: Si no es admin, lo mandamos al Login ---
-            if (HttpContext.Session.GetString("UsuarioAdmin") == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
-            // -----------------------------------------------------
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
 
-            // Si pasa el candado, cargamos la lista
-            var respuesta = await _apiService.GetListAsync<Candidato>("Candidatos/por-proceso/1");
+            // Buscamos el proceso activo para filtrar candidatos
+            var procesos = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
+            var activo = procesos.Data?.FirstOrDefault(p => p.Activo);
 
-            if (!respuesta.Success)
+            if (activo == null)
             {
-                ViewBag.Error = "No se pudieron cargar los candidatos.";
+                ViewBag.Error = "No hay una elección activa. Crea una primero.";
                 return View(new List<Candidato>());
             }
 
-            return View(respuesta.Data);
+            var respuesta = await _apiService.GetListAsync<Candidato>($"Candidatos/por-proceso/{activo.Id}");
+            return View(respuesta.Success ? respuesta.Data : new List<Candidato>());
         }
 
         // ---------------------------------------------------------
-        // 2. CREAR CANDIDATO - VISTA (Con Seguridad 🔒)
+        // 2. CREAR PROCESO ELECTORAL (¡NUEVO!)
         // ---------------------------------------------------------
-        public IActionResult CrearCandidato()
+        public IActionResult CrearProceso()
         {
-            // Candado
-            if (HttpContext.Session.GetString("UsuarioAdmin") == null)
-                return RedirectToAction("Login", "Account");
-
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
             return View();
         }
 
-        // ---------------------------------------------------------
-        // 3. CREAR CANDIDATO - GUARDAR (Con Seguridad 🔒)
-        // ---------------------------------------------------------
         [HttpPost]
-        public async Task<IActionResult> CrearCandidato(Candidato candidato)
+        public async Task<IActionResult> CrearProceso(ProcesoElectoral proceso)
         {
-            // Candado
-            if (HttpContext.Session.GetString("UsuarioAdmin") == null)
-                return RedirectToAction("Login", "Account");
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
 
-            // Forzamos el proceso #1
-            candidato.ProcesoElectoralId = 1;
-
-            if (!ModelState.IsValid) return View(candidato);
-
-            // Guardamos en la API
-            var respuesta = await _apiService.PostAsync("Candidatos", candidato);
-
-            if (respuesta.Success)
+            if (ModelState.IsValid)
             {
-                return RedirectToAction("Candidatos");
+                proceso.Activo = true; // Nace activo
+                proceso.FechaInicio = DateTime.Now;
+
+                var response = await _apiService.PostAsync("ProcesosElectorales", proceso);
+                if (response.Success)
+                {
+                    TempData["Mensaje"] = "✅ Elección creada con éxito.";
+                    return RedirectToAction("Index", "Home");
+                }
+                ModelState.AddModelError("", response.Message);
             }
-            else
-            {
-                ViewBag.Error = "Error al guardar: " + respuesta.Message;
-                return View(candidato);
-            }
+            return View(proceso);
         }
 
         // ---------------------------------------------------------
-        // 4. ELIMINAR CANDIDATO (Con Seguridad 🔒)
+        // 3. CREAR CANDIDATO (Con detección automática de proceso)
+        // ---------------------------------------------------------
+        public IActionResult CrearCandidato()
+        {
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CrearCandidato(Candidato candidato)
+        {
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
+
+            // 1. Buscamos cuál es la elección actual
+            var procesos = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
+            var activo = procesos.Data?.FirstOrDefault(p => p.Activo);
+
+            if (activo != null)
+            {
+                candidato.ProcesoElectoralId = activo.Id; // Asignamos ID real
+            }
+            else
+            {
+                ModelState.AddModelError("", "⚠️ No hay elección activa. Crea un Proceso primero.");
+                return View(candidato);
+            }
+
+            if (!ModelState.IsValid) return View(candidato);
+
+            var respuesta = await _apiService.PostAsync("Candidatos", candidato);
+
+            if (respuesta.Success) return RedirectToAction("Candidatos");
+
+            ViewBag.Error = "Error: " + respuesta.Message;
+            return View(candidato);
+        }
+
+        // ---------------------------------------------------------
+        // 4. ELIMINAR CANDIDATO
         // ---------------------------------------------------------
         public async Task<IActionResult> Eliminar(int id)
         {
-            // Candado
-            if (HttpContext.Session.GetString("UsuarioAdmin") == null)
-                return RedirectToAction("Login", "Account");
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
 
-            // Llamamos a la API para borrar
             var respuesta = await _apiService.DeleteAsync($"Candidatos/{id}");
-
-            if (!respuesta.Success)
-            {
-                TempData["Error"] = "No se pudo eliminar: " + respuesta.Message;
-            }
+            if (!respuesta.Success) TempData["Error"] = respuesta.Message;
 
             return RedirectToAction("Candidatos");
         }

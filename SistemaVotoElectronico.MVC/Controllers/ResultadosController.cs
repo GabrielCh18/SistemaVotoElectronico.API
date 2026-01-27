@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SistemaVotoElectronico.ApiConsumer;
-using SistemaVoto.Modelos; // <--- ¡Este es el cambio importante!
+using SistemaVoto.Modelos;
 
 namespace SistemaVotoElectronico.MVC.Controllers
 {
@@ -15,17 +15,25 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Pedimos los resultados de la elección #1
-            // Nota: Asegúrate de tener la clase 'ResumenGeneral' en tus modelos del MVC
-            var respuesta = await _apiService.GetAsync<ResumenGeneral>("Resultados/1");
+            // 1. Preguntar a la API qué elección está activa
+            var procesosResp = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
 
-            if (respuesta.Success)
+            // Buscamos el activo
+            var activo = procesosResp.Data?.FirstOrDefault(p => p.Activo);
+
+            if (activo != null)
             {
-                return View(respuesta.Data);
+                // 2. Pedimos resultados de ESA elección específica
+                var respuesta = await _apiService.GetAsync<ResumenGeneral>($"Resultados/{activo.Id}");
+
+                if (respuesta.Success)
+                {
+                    return View(respuesta.Data);
+                }
             }
 
-            // Si falla, mostramos error
-            ViewBag.Error = respuesta.Message;
+            // Si no hay elección o falló
+            ViewBag.Error = "No hay resultados disponibles en este momento.";
             return View(new ResumenGeneral());
         }
     }

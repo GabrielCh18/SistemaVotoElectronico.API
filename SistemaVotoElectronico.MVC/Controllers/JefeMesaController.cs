@@ -3,7 +3,6 @@ using SistemaVotoElectronico.ApiConsumer;
 
 namespace SistemaVotoElectronico.MVC.Controllers
 {
-    // [Authorize(Roles = "JefeMesa")] // Descomenta si usas roles
     public class JefeMesaController : Controller
     {
         private readonly ApiService _apiService;
@@ -21,22 +20,40 @@ namespace SistemaVotoElectronico.MVC.Controllers
         [HttpPost]
         public async Task<IActionResult> Generar(string cedula)
         {
-            // Enviamos la petición a la API
-            var response = await _apiService.PostAsync<dynamic>($"api/Votantes/generar-codigo/{cedula}", null);
-
-            if (response.Success)
+            if (string.IsNullOrEmpty(cedula))
             {
-                // Leemos el código que devolvió la API (usando Newtonsoft.Json si es necesario parsear mejor)
-                // Aquí asumimos que response.Data trae el objeto JSON
-                ViewBag.CodigoGenerado = response.Data.ToString();
-                ViewBag.Mensaje = "✅ CÓDIGO GENERADO. Entréguelo al votante.";
+                ViewBag.Error = "⚠️ Por favor, ingrese un número de cédula.";
+                return View("Index");
+            }
+
+            // CORRECCIÓN: Usamos PostWithResponseAsync
+            // <LoQueEnvio, LoQueRecibo>
+            // Enviamos un objeto vacío (new RespuestaCodigo) solo para cumplir con el requisito
+            var response = await _apiService.PostWithResponseAsync<RespuestaCodigo, RespuestaCodigo>(
+                $"Votantes/generar-codigo/{cedula}",
+                new RespuestaCodigo()
+            );
+
+            if (response.Success && response.Data != null)
+            {
+                // AHORA SÍ FUNCIONA: Data ya es un objeto, no un string
+                ViewBag.CodigoGenerado = response.Data.Codigo;
+                ViewBag.NombreVotante = response.Data.Nombre;
+                ViewBag.Mensaje = "✅ CÓDIGO GENERADO EXITOSAMENTE";
             }
             else
             {
-                ViewBag.Error = "❌ Error: " + response.Message;
+                ViewBag.Error = "❌ " + response.Message;
             }
 
             return View("Index");
         }
+    }
+
+    // Clase para recibir la respuesta (DTO)
+    public class RespuestaCodigo
+    {
+        public string Codigo { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
     }
 }

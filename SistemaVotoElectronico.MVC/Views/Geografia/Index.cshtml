@@ -1,0 +1,26 @@
+﻿@{
+    ViewData["Title"] = "Gestión de Ubicaciones";
+}
+
+<div class="container mt-4">
+    <h2>🗺️ Gestión de Territorio y Mesas</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5>1. Provincias</h5>
+                    <a asp-action="CrearProvincia" class="btn btn-primary btn-sm">Crear Provincia</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5>2. Cantones</h5>
+                    <a asp-action="CrearCanton" class="btn btn-info btn-sm">Crear Cantón</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,13 +1,12 @@
 ﻿@using Microsoft.AspNetCore.Http
 @{
-    string controladorActual = ViewContext.RouteData.Values["controller"]?.ToString();
-    string accionActual = ViewContext.RouteData.Values["action"]?.ToString();
+    string ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
 
-    // BANDERA 1: ¿Estoy en el Home?
-    bool estoyEnHome = (controladorActual == "Home");
+    // ZONA PÚBLICA: Home y Resultados (Aquí el Admin es invisible)
+    bool esZonaPublica = (ctrl == "Home" || ctrl == "Resultados");
 
-    // BANDERA 2: ¿Estoy trabajando como Jefe de Mesa?
-    bool estoyEnMesa = (controladorActual == "JefeMesa");
+    // ZONA JEFE
+    bool esZonaJefe = (ctrl == "JefeMesa");
 }
 
 <!DOCTYPE html>
@@ -19,22 +18,22 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SistemaVotoElectronico.MVC.styles.css" asp-append-version="true" />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
 
-                @if (estoyEnMesa)
+                @if (esZonaJefe)
                 {
                     <span class="navbar-brand text-primary fw-bold">👮‍♂️ CONTROL DE MESA</span>
                 }
-                // PRIORIDAD 2: Si soy Admin y NO estoy en Home
-                else if (!estoyEnHome && Context.Session.GetString("UsuarioAdmin") != null)
+                else if (!esZonaPublica && Context.Session.GetString("UsuarioAdmin") != null)
                 {
                     <span class="navbar-brand text-danger fw-bold">⚙️ PANEL ADMINISTRATIVO</span>
                 }
-                // PRIORIDAD 3: Público
                 else
                 {
                     <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">🗳️ Sistema Voto 2026</a>
@@ -48,13 +47,13 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1 align-items-center">
 
-                        @if (estoyEnHome)
+                        @if (esZonaPublica)
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark fw-bold" asp-area="" asp-controller="Home" asp-action="Index">🏠 Inicio</a>
                             </li>
 
-                            @if (ViewBag.MostrarResultados == true)
+                            @if (ctrl != "Resultados")
                             {
                                 <li class="nav-item ms-2">
                                     <a class="nav-link text-primary fw-bold border border-primary rounded px-3" asp-area="" asp-controller="Resultados" asp-action="Index">
@@ -62,11 +61,11 @@
                                     </a>
                                 </li>
                             }
+
                         }
 
-                        else if (estoyEnMesa || Context.Session.GetString("JefeLogueado") != null && Context.Session.GetString("UsuarioAdmin") == null)
+                        else if (esZonaJefe || (Context.Session.GetString("JefeLogueado") != null && Context.Session.GetString("UsuarioAdmin") == null))
                         {
-                            // Menú del Jefe de Mesa
                             <li class="ms-auto"></li>
                             <li class="nav-item d-flex align-items-center bg-white border rounded px-3 py-1 shadow-sm">
                                 <span class="badge bg-primary me-2">MESA ACTIVA</span>
@@ -79,7 +78,6 @@
 
                         else if (Context.Session.GetString("UsuarioAdmin") != null)
                         {
-                            // 🔴 MENÚ DEL ADMINISTRADOR 🔴
                             <li class="ms-auto"></li>
 
                             <li class="nav-item dropdown">
@@ -88,10 +86,9 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
                                     <li><h6 class="dropdown-header text-danger">Control Electoral</h6></li>
-                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="Historial">📜 Historial / Cerrar</a></li>
                                     <li><a class="dropdown-item" asp-controller="Votaciones" asp-action="Index">🗳️ Elecciones</a></li>
                                     <li><a class="dropdown-item" asp-controller="Admin" asp-action="Candidatos">👤 Candidatos</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Resultados" asp-action="Index">📊 Resultados</a></li>
+                                    <li><a class="dropdown-item fw-bold text-primary" asp-controller="Resultados" asp-action="Index">📊 Ver Resultados</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header text-danger">Base de Datos</h6></li>
                                     <li><a class="dropdown-item" asp-controller="Votantes" asp-action="Crear">👥 Votantes</a></li>
@@ -120,11 +117,11 @@
         </main>
     </div>
 
-    @if (estoyEnHome || (Context.Session.GetString("UsuarioAdmin") == null && Context.Session.GetString("JefeLogueado") == null))
+    @if (esZonaPublica || (Context.Session.GetString("UsuarioAdmin") == null && Context.Session.GetString("JefeLogueado") == null))
     {
         <footer class="border-top footer text-muted">
             <div class="container">
-                &copy; 2026 - Sistema Voto
+                &copy; 2026 - Sistema Voto Electrónico
             </div>
         </footer>
     }

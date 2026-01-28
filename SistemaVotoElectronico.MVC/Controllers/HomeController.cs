@@ -20,17 +20,12 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
         public async Task<IActionResult> Index(string? cedula)
         {
-            // --- LÓGICA DE VISIBILIDAD DE RESULTADOS ---
-
-            // 1. Preguntamos a la API si hay un proceso activo
             var procesoActivo = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
             bool hayEleccionEnCurso = (procesoActivo.Success && procesoActivo.Data != null);
 
-            // ✅ CORRECCIÓN: Quitamos la excepción del Admin.
-            // Ahora la regla es estricta: Solo se ven resultados si NO hay elección en curso.
             ViewBag.MostrarResultados = !hayEleccionEnCurso;
 
-            // (El resto del código de búsqueda sigue igual...)
+            // 3. Lógica del Buscador
             if (string.IsNullOrEmpty(cedula))
             {
                 return View();

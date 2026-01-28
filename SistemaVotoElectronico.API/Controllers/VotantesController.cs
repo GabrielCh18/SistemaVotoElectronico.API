@@ -44,6 +44,7 @@ namespace SistemaVotoElectronico.API.Controllers
         [HttpGet("buscar/{cedula}")]
         public async Task<ActionResult<Votante>> GetVotante(string cedula)
         {
+            // 1. Buscamos al votante
             var votante = await _context.Votantes
                 .Include(v => v.Junta)
                 .ThenInclude(j => j.Zona)
@@ -51,6 +52,31 @@ namespace SistemaVotoElectronico.API.Controllers
 
             if (votante == null)
                 return NotFound("Ciudadano no encontrado.");
+
+            // 2. Buscamos el PROCESO ACTIVO
+            var ahora = DateTime.UtcNow;
+
+            var procesoActivo = await _context.ProcesoElectorales
+                .FirstOrDefaultAsync(p => p.Activo && p.FechaInicio <= ahora && p.FechaFin >= ahora);
+
+            if (procesoActivo != null)
+            {
+                // ✅ Guardamos el nombre del proceso para mostrarlo
+                // ⚠️ OJO: Verifica si en tu modelo 'ProcesoElectoral' se llama 'Nombre', 'Titulo' o 'Descripcion'
+                votante.NombreProceso = procesoActivo.Nombre;
+
+                // Verificamos si ya votó
+                bool tieneVoto = await _context.Votos.AnyAsync(v =>
+                    v.IdVotante == votante.Id &&
+                    v.ProcesoElectoralId == procesoActivo.Id
+                );
+                votante.YaVoto = tieneVoto;
+            }
+            else
+            {
+                votante.NombreProceso = "Sin Proceso Activo";
+                votante.YaVoto = false;
+            }
 
             return Ok(votante);
         }

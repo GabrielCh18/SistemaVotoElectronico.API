@@ -47,62 +47,69 @@
                 </div>
 
                 <div class="card-body text-center">
-                    <h3 class="fw-bold text-dark">
+                    <h3 class="fw-bold text-dark mb-1">
                         @Model.Nombre @Model.Apellido
                     </h3>
+                    <p class="text-muted mb-2">C.I. @Model.Cedula</p>
 
-                    <p class="text-muted mb-4">
-                        C.I. @Model.Cedula
-                    </p>
+                    @if (!string.IsNullOrEmpty(Model.NombreProceso))
+                    {
+                        <span class="badge bg-primary fs-6 mb-3">
+                            🗳️ @Model.NombreProceso
+                        </span>
+                    }
 
                     <hr />
 
                     <div class="row text-start mt-4">
                         <div class="col-6 mb-3">
-                            <h6 class="text-muted text-uppercase small">
-                                Recinto Electoral (Zona)
-                            </h6>
-                            <h5 class="fw-bold text-primary">
-                                @Model.Junta?.Zona?.Nombre
-                            </h5>
+                            <h6 class="text-muted text-uppercase small">Recinto Electoral (Zona)</h6>
+                            <h5 class="fw-bold text-primary">@Model.Junta?.Zona?.Nombre</h5>
                         </div>
 
                         <div class="col-6 mb-3">
-                            <h6 class="text-muted text-uppercase small">
-                                Dirección
-                            </h6>
-                            <h5 class="text-dark">
-                                @Model.Junta?.Zona?.Direccion
-                            </h5>
+                            <h6 class="text-muted text-uppercase small">Dirección</h6>
+                            <h5 class="text-dark">@Model.Junta?.Zona?.Direccion</h5>
                         </div>
 
                         <div class="col-6">
-                            <h6 class="text-muted text-uppercase small">
-                                Número de Mesa
-                            </h6>
-                            <h2 class="fw-bold text-danger">
-                                Mesa @Model.Junta?.Numero
-                            </h2>
+                            <h6 class="text-muted text-uppercase small">Número de Mesa</h6>
+                            <h2 class="fw-bold text-danger">Mesa @Model.Junta?.Numero</h2>
                         </div>
 
                         <div class="col-6">
-                            <h6 class="text-muted text-uppercase small">
-                                Género de Mesa
-                            </h6>
+                            <h6 class="text-muted text-uppercase small">Género de Mesa</h6>
                             <h5 class="text-dark">
-                                @(Model.Junta?.Genero == "M"
-                                                            ? "Masculino"
-                                                            : "Femenino")
+                                @(Model.Junta?.Genero == "M" ? "Masculino" : "Femenino")
                             </h5>
                         </div>
                     </div>
 
-                    <div class="alert alert-info mt-4">
-                        <strong>Estado:</strong>
-                        <span class="badge bg-secondary">
-                            Información disponible en el proceso electoral
-                        </span>
-                    </div>
+                    @if (Model.YaVoto)
+                    {
+                        <div class="alert alert-warning mt-4 shadow-sm border-warning">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <span class="fs-2 me-3">⚠️</span>
+                                <div class="text-start">
+                                    <h5 class="alert-heading fw-bold mb-1">YA SUFRAGÓ</h5>
+                                    <p class="mb-0">Usted ya ha ejercido su derecho al voto en este proceso.</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success mt-4 shadow-sm border-success">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <span class="fs-2 me-3">🗳️</span>
+                                <div class="text-start">
+                                    <h5 class="alert-heading fw-bold mb-1">HABILITADO PARA VOTAR</h5>
+                                    <p class="mb-0">Acérquese a su mesa asignada para sufragar.</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
                 </div>
             </div>
         }

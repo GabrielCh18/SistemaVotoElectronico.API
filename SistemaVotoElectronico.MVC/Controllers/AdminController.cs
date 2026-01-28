@@ -16,15 +16,12 @@ namespace SistemaVotoElectronico.MVC.Controllers
         private bool NoEsAdmin() =>
             HttpContext.Session.GetString("UsuarioAdmin") == null;
 
-        // ---------------------------------------------------------
         // 1️⃣ LISTAR CANDIDATOS DEL PROCESO ACTIVO REAL
-        // ---------------------------------------------------------
         public async Task<IActionResult> Candidatos()
         {
             if (NoEsAdmin())
                 return RedirectToAction("Login", "Account");
 
-            // 🔥 AHORA usamos el endpoint correcto
             var procesoActivo = await _apiService
                 .GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
 
@@ -40,26 +37,24 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(respuesta.Success ? respuesta.Data : new List<Candidato>());
         }
 
-        // ---------------------------------------------------------
         // 2️⃣ CREAR PROCESO ELECTORAL (GET)
-        // ---------------------------------------------------------
         [HttpGet]
         public IActionResult CrearProceso()
         {
             if (NoEsAdmin())
                 return RedirectToAction("Login", "Account");
 
+            // Si corres esto en local, DateTime.Now está bien.
+            // Si el MVC también está en Docker, mejor usar UtcNow.AddHours(-5) por seguridad.
             return View(new ProcesoElectoral
             {
-                FechaInicio = DateTime.Now.AddMinutes(5),
+                FechaInicio = DateTime.Now,
                 FechaFin = DateTime.Now.AddHours(3),
                 Activo = true
             });
         }
 
-        // ---------------------------------------------------------
         // 2️⃣ CREAR PROCESO ELECTORAL (POST)
-        // ---------------------------------------------------------
         [HttpPost]
         public async Task<IActionResult> CrearProceso(ProcesoElectoral proceso)
         {
@@ -74,13 +69,13 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             // 🔒 Cerrar procesos activos anteriores
             var procesos = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
-
             var activos = procesos.Data?.Where(p => p.Activo).ToList();
 
             if (activos != null)
             {
                 foreach (var p in activos)
                 {
+                    // Ahora esto funcionará porque cambiamos el API a [HttpPost]
                     await _apiService.PostAsync<object>($"ProcesosElectorales/cerrar/{p.Id}", null);
                 }
             }
@@ -99,62 +94,48 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(proceso);
         }
 
-        // ---------------------------------------------------------
         // 3️⃣ CREAR CANDIDATO (GET)
-        // ---------------------------------------------------------
         [HttpGet]
         public IActionResult CrearCandidato()
         {
-            if (NoEsAdmin())
-                return RedirectToAction("Login", "Account");
-
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
             return View();
         }
 
-        // ---------------------------------------------------------
         // 3️⃣ CREAR CANDIDATO (POST)
-        // ---------------------------------------------------------
         [HttpPost]
         public async Task<IActionResult> CrearCandidato(Candidato candidato)
         {
-            if (NoEsAdmin())
-                return RedirectToAction("Login", "Account");
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
 
-            var procesoActivo = await _apiService
-                .GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
+            var procesoActivo = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
 
             if (!procesoActivo.Success || procesoActivo.Data == null)
             {
-                ModelState.AddModelError("", "⚠️ No hay un proceso electoral activo.");
+                ModelState.AddModelError("", "⚠️ No hay un proceso electoral activo. Crea un proceso primero.");
                 return View(candidato);
             }
 
             candidato.ProcesoElectoralId = procesoActivo.Data.Id;
 
-            if (!ModelState.IsValid)
-                return View(candidato);
+            // Quitamos validaciones del modelo que puedan estorbar si no vienen del form
+            if (!ModelState.IsValid) return View(candidato);
 
             var respuesta = await _apiService.PostAsync<Candidato>("Candidatos", candidato);
 
-            if (respuesta.Success)
-                return RedirectToAction("Candidatos");
+            if (respuesta.Success) return RedirectToAction("Candidatos");
 
             ModelState.AddModelError("", respuesta.Message);
             return View(candidato);
         }
 
-        // ---------------------------------------------------------
         // 4️⃣ ELIMINAR CANDIDATO
-        // ---------------------------------------------------------
         public async Task<IActionResult> Eliminar(int id)
         {
-            if (NoEsAdmin())
-                return RedirectToAction("Login", "Account");
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
 
             var respuesta = await _apiService.DeleteAsync($"Candidatos/{id}");
-
-            if (!respuesta.Success)
-                TempData["Error"] = respuesta.Message;
+            if (!respuesta.Success) TempData["Error"] = respuesta.Message;
 
             return RedirectToAction("Candidatos");
         }

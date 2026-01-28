@@ -29,14 +29,16 @@ namespace SistemaVotoElectronico.API.Controllers
         [HttpGet("activo")]
         public async Task<ActionResult<ProcesoElectoral>> GetProcesoActivo()
         {
-            var ahora = DateTime.Now;
+            // TRUCO PARA DOCKER/RENDER: 
+            // Obtenemos la hora UTC (Universal) y le restamos 5 horas para simular Ecuador
+            var ahoraEcuador = DateTime.UtcNow.AddHours(-5);
 
             var proceso = await _context.ProcesoElectorales
                 .Include(p => p.Candidatos)
                 .FirstOrDefaultAsync(p =>
                     p.Activo &&
-                    p.FechaInicio <= ahora &&
-                    p.FechaFin >= ahora
+                    p.FechaInicio <= ahoraEcuador && // Compara con hora Ecuador
+                    p.FechaFin >= ahoraEcuador       // Compara con hora Ecuador
                 );
 
             if (proceso == null)
@@ -49,11 +51,14 @@ namespace SistemaVotoElectronico.API.Controllers
         [HttpPost]
         public async Task<ActionResult> PostProceso(ProcesoElectoral proceso)
         {
-            // Validación de fechas
+            // Validación de fechas simple
             if (proceso.FechaInicio >= proceso.FechaFin)
             {
                 return BadRequest("La fecha de inicio debe ser menor a la fecha de fin.");
             }
+
+            // Aseguramos que se guarde como activo
+            proceso.Activo = true;
 
             _context.ProcesoElectorales.Add(proceso);
             await _context.SaveChangesAsync();
@@ -61,8 +66,9 @@ namespace SistemaVotoElectronico.API.Controllers
             return Ok(proceso);
         }
 
-        // PUT: cerrar proceso manualmente
-        [HttpPut("cerrar/{id}")]
+        // ⚠️ CAMBIO IMPORTANTE: De PUT a POST para que funcione con tu MVC
+        // POST: cerrar proceso manualmente
+        [HttpPost("cerrar/{id}")]
         public async Task<IActionResult> CerrarProceso(int id)
         {
             var proceso = await _context.ProcesoElectorales.FindAsync(id);

@@ -15,7 +15,22 @@ namespace SistemaVotoElectronico.API.Controllers
         {
             _context = context;
         }
+        // GET: api/ProcesosElectorales/5
+        // ESTE ES EL QUE FALTABA PARA QUE EL HISTORIAL FUNCIONE
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ProcesoElectoral>> GetProceso(int id)
+        {
+            var proceso = await _context.ProcesoElectorales
+                .Include(p => p.Candidatos) // Incluimos candidatos por si acaso
+                .FirstOrDefaultAsync(p => p.Id == id);
 
+            if (proceso == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(proceso);
+        }
         // GET: todos los procesos
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProcesoElectoral>>> GetProcesos()

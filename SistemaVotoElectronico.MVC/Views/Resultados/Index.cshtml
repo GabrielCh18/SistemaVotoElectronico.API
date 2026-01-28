@@ -1,41 +1,102 @@
 ﻿@model SistemaVoto.Modelos.ResumenGeneral
-<div class="container mt-5">
-    <h1 class="text-center mb-4">📊 Resultados en Tiempo Real</h1>
 
-    @if (Model != null && Model.Resultados != null)
-    {
-        <div class="row">
-            <div class="col-md-12">
-                <div class="alert alert-info">
-                    Total de Votos Escrutados: <strong>@Model.TotalVotos</strong> | Estado: <strong>@Model.Estado</strong>
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">⬅️ Volver al Inicio</a>
+        <button onclick="generarPDF()" class="btn btn-danger shadow">
+            📄 Descargar PDF
+        </button>
+    </div>
+
+    <div id="area-impresion" class="p-4 bg-white border rounded">
+
+        <h1 class="text-center mb-2 text-primary fw-bold">📊 Resultados Electorales</h1>
+        <p class="text-center text-muted mb-4">Reporte Oficial del Sistema</p>
+
+        @if (Model != null && Model.Resultados != null)
+        {
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="alert alert-info text-center shadow-sm">
+                        Total de Votos: <strong>@Model.TotalVotos</strong> | Estado: <strong>@Model.Estado</strong>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="row">
-            @foreach (var item in Model.Resultados)
-            {
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <img src="@item.FotoUrl" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;" alt="@item.Candidato">
-                            <h5 class="card-title">@item.Candidato</h5>
-                            <p class="text-muted">@item.Partido</p>
+            <div class="row justify-content-center">
+                @foreach (var item in Model.Resultados)
+                {
+                    // Lógica para detectar al Ganador (asumiendo que vienen ordenados)
+                    var esGanador = item == Model.Resultados.First() && item.CantidadVotos > 0 && item.Partido != "Sistema";
+                    var esNulo = item.Partido == "Sistema";
 
-                            <h2 class="display-4">@item.Porcentaje%</h2>
-                            <p>@item.CantidadVotos votos</p>
+                    // Colores dinámicos
+                    var colorBorde = esGanador ? "border-success border-2" : (esNulo ? "border-secondary" : "");
+                    var colorBarra = esGanador ? "bg-success" : (esNulo ? "bg-secondary" : "bg-primary");
+                    var icono = esGanador ? "🏆 GANADOR" : (esNulo ? "⚪" : "");
 
-                            <div class="progress" style="height: 20px;">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: @item.Porcentaje.ToString().Replace(",", ".")%" aria-valuenow="@item.Porcentaje" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 shadow-sm @colorBorde">
+                            <div class="card-body text-center">
+
+                                <img src="@(string.IsNullOrEmpty(item.FotoUrl) ? "https://via.placeholder.com/100" : item.FotoUrl)"
+                                     class="rounded-circle mb-3 border shadow-sm"
+                                     style="width: 100px; height: 100px; object-fit: cover;"
+                                     alt="@item.Candidato"
+                                     onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'">
+
+                                <h5 class="card-title fw-bold">@item.Candidato</h5>
+
+                                @if (esGanador)
+                                {
+                                    <span class="badge bg-warning text-dark mb-2">@icono</span>
+                                }
+
+                                <p class="text-muted small">@item.Partido</p>
+
+                                <h2 class="display-5 fw-bold my-3">@item.Porcentaje%</h2>
+                                <p class="mb-2">@item.CantidadVotos votos</p>
+
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar @colorBarra progress-bar-striped progress-bar-animated"
+                                         role="progressbar"
+                                         style="width: @item.Porcentaje.ToString().Replace(",", ".")%"
+                                         aria-valuenow="@item.Porcentaje" aria-valuemin="0" aria-valuemax="100">
+                                        @item.Porcentaje%
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            }
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-warning">No hay datos disponibles o hubo un error de conexión.</div>
-    }
+                }
+            </div>
+
+            <div class="text-center mt-4 pt-3 border-top text-muted small">
+                Generado el @DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning text-center">
+                ⚠️ No hay datos disponibles para mostrar en este momento.
+            </div>
+        }
+    </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+    function generarPDF() {
+        var element = document.getElementById('area-impresion');
+        var opt = {
+          margin:       0.5,
+          filename:     'Resultados_Electorales.pdf',
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2 },
+          jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+</script>

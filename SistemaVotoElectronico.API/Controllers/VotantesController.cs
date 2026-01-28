@@ -148,5 +148,19 @@ namespace SistemaVotoElectronico.API.Controllers
                 nombre = $"{votante.Nombre} {votante.Apellido}"
             });
         }
+        // --------------------------------------------------
+        // LISTAR TODOS LOS VOTANTES (Con ubicación completa)
+        // --------------------------------------------------
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Votante>>> GetVotantes()
+        {
+            return await _context.Votantes
+                .Include(v => v.Junta)
+                    .ThenInclude(j => j.Zona)
+                        .ThenInclude(z => z.Parroquia)
+                            .ThenInclude(p => p.Canton)
+                                .ThenInclude(c => c.Provincia)
+                .ToListAsync();
+        }
     }
 }

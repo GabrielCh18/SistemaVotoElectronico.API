@@ -59,5 +59,24 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             return View(votante);
         }
+        // --------------------------------------------------
+        // 2. LISTADO GENERAL (PADRÓN)
+        // --------------------------------------------------
+        public async Task<IActionResult> Index()
+        {
+            // Verificamos si es admin
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
+
+            // Pedimos la lista completa al API
+            var respuesta = await _apiService.GetListAsync<Votante>("Votantes");
+
+            if (!respuesta.Success)
+            {
+                ViewBag.Error = "No se pudo cargar el padrón electoral.";
+                return View(new List<Votante>());
+            }
+
+            return View(respuesta.Data);
+        }
     }
 }

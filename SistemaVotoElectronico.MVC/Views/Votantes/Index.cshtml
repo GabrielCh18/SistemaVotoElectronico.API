@@ -1,0 +1,107 @@
+﻿@model IEnumerable<SistemaVoto.Modelos.Votante>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-primary fw-bold mb-0">📋 Padrón Electoral</h2>
+            <p class="text-muted">Agrupado por Recinto Electoral</p>
+        </div>
+        <a asp-action="Crear" class="btn btn-success shadow-sm">➕ Nuevo Votante</a>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        // 🧠 TRUCO: Agrupamos los votantes por Zona (Lugar de votación)
+        var grupos = Model.GroupBy(v => new
+        {
+            Zona = v.Junta?.Zona?.Nombre ?? "Sin Asignar",
+            Direccion = v.Junta?.Zona?.Direccion ?? "---",
+            Ubicacion = v.Junta != null
+        ? $"{v.Junta.Zona.Parroquia.Canton.Nombre}, {v.Junta.Zona.Parroquia.Nombre}"
+        : ""
+        }).OrderBy(g => g.Key.Zona);
+
+        @foreach (var grupo in grupos)
+        {
+            <div class="card mb-5 shadow border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-1 fw-bold">📍 @grupo.Key.Zona</h4>
+                            <small class="text-white-50">
+                                <i class="bi bi-geo-alt-fill"></i> @grupo.Key.Direccion | @grupo.Key.Ubicacion
+                            </small>
+                        </div>
+                        <span class="badge bg-light text-primary fs-6">
+                            @grupo.Count() Votantes
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light text-secondary">
+                                <tr>
+                                    <th class="ps-4">Mesa</th>
+                                    <th>Cédula</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Rol</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in grupo.OrderBy(v => v.Junta?.Numero).ThenBy(v => v.Apellido))
+                                {
+                                    var esJefe = item.EsJefe;
+
+                                    <tr class="@(esJefe ? "table-warning" : "")">
+                                        <td class="ps-4">
+                                            @if (item.Junta != null)
+                                            {
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2"
+                                                         style="width: 35px; height: 35px; font-weight: bold;">
+                                                        @item.Junta.Numero
+                                                    </div>
+                                                    <small class="text-muted">@item.Junta.Genero</small>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">N/A</span>
+                                            }
+                                        </td>
+                                        <td class="fw-bold font-monospace">@item.Cedula</td>
+                                        <td>@item.Apellido @item.Nombre</td>
+                                        <td>
+                                            @if (esJefe)
+                                            {
+                                                <span class="badge bg-danger">👮 JEFE DE MESA</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">Ciudadano</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="text-center text-muted mt-4">
+            Total General: <strong>@Model.Count() votantes registados.</strong>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center shadow-sm p-5">
+            <h4 class="alert-heading">📭 Padrón Vacío</h4>
+            <p>No hay votantes registrados en el sistema todavía.</p>
+            <a asp-action="Crear" class="btn btn-primary mt-3">Registrar el Primer Votante</a>
+        </div>
+    }
+</div>

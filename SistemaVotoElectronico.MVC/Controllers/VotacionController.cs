@@ -13,121 +13,102 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
-        // 1️⃣ LOGIN
+        // 1️⃣ PANTALLA DE INGRESO
         public IActionResult Index()
         {
+            HttpContext.Session.Clear(); // Limpiamos sesión al entrar
             return View();
         }
 
-        // 2️⃣ VALIDAR INGRESO
+        // 2️⃣ VALIDAR CÉDULA Y CÓDIGO
         [HttpPost]
         public async Task<IActionResult> Ingresar(string cedula, string codigo)
         {
-            // 🔍 Consultar proceso activo
-            var procesoActivo = await _apiService
-                .GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
-
-            if (!procesoActivo.Success)
+            if (string.IsNullOrEmpty(cedula) || string.IsNullOrEmpty(codigo))
             {
-                ViewBag.Error = "🔥 Error al consultar el proceso electoral.";
+                ViewBag.Error = "⚠️ Ingresa cédula y código.";
                 return View("Index");
             }
 
-            if (procesoActivo.Data == null)
+            // Consultar proceso
+            var proceso = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
+            if (!proceso.Success || proceso.Data == null)
             {
-                var procesos = await _apiService
-                    .GetListAsync<ProcesoElectoral>("ProcesosElectorales");
-
-                if (procesos.Data != null && procesos.Data.Any())
-                {
-                    var ultimo = procesos.Data
-                        .OrderByDescending(p => p.FechaInicio)
-                        .First();
-
-                    var ahora = DateTime.UtcNow;
-
-                    if (ahora < ultimo.FechaInicio)
-                    {
-                        ViewBag.Error =
-                            $"⏰ La votación inicia el {ultimo.FechaInicio:dd/MM/yyyy} a las {ultimo.FechaInicio:HH:mm}.";
-                    }
-                    else
-                    {
-                        ViewBag.Error = "🚫 El proceso electoral ya fue cerrado.";
-                    }
-                }
-                else
-                {
-                    ViewBag.Error = "❌ No existen procesos electorales registrados.";
-                }
-
+                ViewBag.Error = "❌ No hay votaciones activas.";
                 return View("Index");
             }
 
-            // 🔹 Validar votante (SOLO existencia)
-            var votante = await _apiService
-                .GetAsync<Votante>($"Votantes/buscar/{cedula}");
-
-            if (!votante.Success)
+            // Consultar Votante
+            var response = await _apiService.GetAsync<Votante>($"Votantes/buscar/{cedula}");
+            if (!response.Success || response.Data == null)
             {
-                ViewBag.Error = $"🔥 ERROR DE CONEXIÓN: {votante.Message}";
+                ViewBag.Error = "❌ Cédula no encontrada.";
                 return View("Index");
             }
 
-            if (votante.Data == null)
+            var votante = response.Data;
+
+            // 🔐 VALIDACIÓN DEL TOKEN (Aquí comparamos con lo que mandó la API)
+            if (votante.Token != codigo)
             {
-                ViewBag.Error = "❌ Votante no encontrado.";
+                ViewBag.Error = "⛔ Código incorrecto o caducado.";
                 return View("Index");
             }
 
-            // ⚠️ YA NO SE VALIDA YaVoto AQUÍ
+            if (votante.YaVoto)
+            {
+                ViewBag.Error = "⚠️ Usted ya votó en este proceso.";
+                return View("Index");
+            }
 
-            // Guardar datos para el flujo
-            TempData["Cedula"] = cedula;
-            TempData["Codigo"] = codigo;
-            TempData["ProcesoId"] = procesoActivo.Data.Id;
+            // ✅ GUARDAR EN SESIÓN (Seguro)
+            HttpContext.Session.SetString("Cedula", cedula);
+            HttpContext.Session.SetString("Codigo", codigo);
+            HttpContext.Session.SetInt32("ProcesoId", proceso.Data.Id);
 
             return RedirectToAction("Papeleta");
         }
 
-        // 3️⃣ PAPELETA
+        // 3️⃣ MOSTRAR PAPELETA
         public async Task<IActionResult> Papeleta()
         {
-            if (TempData["Cedula"] == null)
-                return RedirectToAction("Index");
+            var cedula = HttpContext.Session.GetString("Cedula");
+            var pid = HttpContext.Session.GetInt32("ProcesoId");
 
-            TempData.Keep();
+            if (cedula == null || pid == null) return RedirectToAction("Index");
 
-            int procesoId = (int)TempData["ProcesoId"];
-
-            var candidatos = await _apiService
-                .GetListAsync<Candidato>($"Candidatos/por-proceso/{procesoId}");
-
+            var candidatos = await _apiService.GetListAsync<Candidato>($"Candidatos/por-proceso/{pid}");
             return View(candidatos.Data);
         }
 
-        // 4️⃣ VOTAR
+        // 4️⃣ REGISTRAR EL VOTO
         [HttpPost]
         public async Task<IActionResult> Votar(int candidatoId)
         {
-            var cedula = TempData["Cedula"]?.ToString();
-            var codigo = TempData["Codigo"]?.ToString();
-            int procesoId = (int)TempData["ProcesoId"];
+            // Recuperamos datos de sesión
+            var cedula = HttpContext.Session.GetString("Cedula");
+            var codigo = HttpContext.Session.GetString("Codigo");
+            var pid = HttpContext.Session.GetInt32("ProcesoId");
 
-            string url =
-                $"Votos/registrar-voto?cedula={cedula}&codigo={codigo}&candidatoId={candidatoId}&procesoElectoralId={procesoId}";
+            // Si se perdió la sesión (doble clic), volvemos al inicio suavemente
+            if (cedula == null || codigo == null) return RedirectToAction("Index");
 
-            var respuesta = await _apiService.PostAsync<object>(url, null);
+            string url = $"Votos/registrar-voto?cedula={cedula}&codigo={codigo}&candidatoId={candidatoId}&procesoElectoralId={pid}";
 
-            if (respuesta.Success)
+            var resultado = await _apiService.PostAsync<object>(url, null);
+
+            if (resultado.Success)
+            {
+                HttpContext.Session.Clear(); // Borramos sesión para evitar regresar
                 return RedirectToAction("Exito");
-
-            ViewBag.Error = respuesta.Message;
-
-            var candidatos = await _apiService
-                .GetListAsync<Candidato>($"Candidatos/por-proceso/{procesoId}");
-
-            return View("Papeleta", candidatos.Data);
+            }
+            else
+            {
+                ViewBag.Error = resultado.Message;
+                // Recargamos candidatos para mostrar el error en la misma pantalla
+                var cand = await _apiService.GetListAsync<Candidato>($"Candidatos/por-proceso/{pid}");
+                return View("Papeleta", cand.Data);
+            }
         }
 
         public IActionResult Exito()

@@ -21,5 +21,8 @@ namespace SistemaVoto.Modelos
 
         [NotMapped]
         public string? NombreProceso { get; set; } // 👈 AGREGAR ESTA
+
+        [NotMapped]
+        public string? Token { get; set; }
     }
 }

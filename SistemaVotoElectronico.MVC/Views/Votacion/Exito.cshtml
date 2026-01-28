@@ -1,30 +1,43 @@
 ﻿@{
     ViewData["Title"] = "Voto Registrado";
-    Layout = "~/Views/Shared/_LayoutVotacion.cshtml"; // 👈 Aquí también
+    // Usamos el Layout vacío para que no salga el menú
+    Layout = "~/Views/Shared/_LayoutVotacion.cshtml";
 }
 
-<div class="text-center mt-5 pt-5">
-    <h1 class="display-1 text-success">✅</h1>
-    <h2 class="fw-bold">¡Su voto ha sido guardado!</h2>
-    <p class="lead mb-4">Gracias por cumplir con su deber cívico.</p>
+<div class="container d-flex flex-column justify-content-center align-items-center vh-100 text-center">
 
-    <div class="alert alert-warning d-inline-block">
-        ⚠️ Esta pantalla se cerrará automáticamente en <span id="contador">10</span> segundos.
+    <div class="card shadow-lg border-0 p-5 animate__animated animate__zoomIn">
+        <div class="mb-4">
+            <div style="font-size: 5rem; color: #28a745;">✅</div>
+        </div>
+
+        <h1 class="fw-bold mb-3">¡Voto Guardado!</h1>
+        <p class="lead text-muted mb-4">Su participación ha sido registrada correctamente.</p>
+
+        <div class="alert alert-light border shadow-sm">
+            ⏳ Volviendo al inicio en <span id="segundos" class="fw-bold text-danger">5</span> segundos...
+        </div>
+
+        <a href="/Votacion/Index" class="btn btn-primary mt-3">
+            ⬅ Volver ahora
+        </a>
     </div>
 
-    <div class="mt-4">
-        <a href="/" class="btn btn-outline-dark">Volver al Inicio</a>
-    </div>
 </div>
 
 <script>
-    // Pequeño script para redirigir al inicio automáticamente
-    let segundos = 10;
-    setInterval(function() {
-        segundos--;
-        document.getElementById("contador").innerText = segundos;
-        if (segundos <= 0) {
-            window.location.href = "/";
+    let tiempo = 5;
+    const contador = document.getElementById("segundos");
+
+    const intervalo = setInterval(() => {
+        tiempo--;
+        if (contador) contador.innerText = tiempo;
+
+        if (tiempo <= 0) {
+            clearInterval(intervalo);
+            // 🛑 AQUÍ ESTABA EL DETALLE:
+            // Forzamos la ruta "/Votacion/Index" para que NO vaya al Home.
+            window.location.replace("/Votacion/Index");
         }
     }, 1000);
 </script>

@@ -44,38 +44,42 @@ namespace SistemaVotoElectronico.API.Controllers
         [HttpGet("buscar/{cedula}")]
         public async Task<ActionResult<Votante>> GetVotante(string cedula)
         {
-            // 1. Buscamos al votante
+            // 1. Buscamos al ciudadano y sus datos
             var votante = await _context.Votantes
                 .Include(v => v.Junta)
                 .ThenInclude(j => j.Zona)
                 .FirstOrDefaultAsync(v => v.Cedula == cedula);
 
-            if (votante == null)
-                return NotFound("Ciudadano no encontrado.");
+            if (votante == null) return NotFound("Ciudadano no encontrado.");
 
-            // 2. Buscamos el PROCESO ACTIVO
+            // 2. Buscamos si hay ELECCIÓN ACTIVA
             var ahora = DateTime.UtcNow;
-
             var procesoActivo = await _context.ProcesoElectorales
                 .FirstOrDefaultAsync(p => p.Activo && p.FechaInicio <= ahora && p.FechaFin >= ahora);
 
             if (procesoActivo != null)
             {
-                // ✅ Guardamos el nombre del proceso para mostrarlo
-                // ⚠️ OJO: Verifica si en tu modelo 'ProcesoElectoral' se llama 'Nombre', 'Titulo' o 'Descripcion'
                 votante.NombreProceso = procesoActivo.Nombre;
 
-                // Verificamos si ya votó
-                bool tieneVoto = await _context.Votos.AnyAsync(v =>
+                // Verificamos si ya votó en ESTE proceso
+                votante.YaVoto = await _context.Votos.AnyAsync(v =>
                     v.IdVotante == votante.Id &&
                     v.ProcesoElectoralId == procesoActivo.Id
                 );
-                votante.YaVoto = tieneVoto;
             }
-            else
+
+            // 3. 🔥 RECUPERAMOS EL TOKEN ACTIVO 🔥
+            // Buscamos el código que no ha expirado y no se ha usado
+            var tokenActivo = await _context.Tokens
+                .Where(t => t.VotanteId == votante.Id &&
+                            !t.FueUsado &&
+                            t.FechaExpiracion > DateTime.UtcNow)
+                .OrderByDescending(t => t.FechaExpiracion)
+                .FirstOrDefaultAsync();
+
+            if (tokenActivo != null)
             {
-                votante.NombreProceso = "Sin Proceso Activo";
-                votante.YaVoto = false;
+                votante.Token = tokenActivo.CodigoUnico; // Lo guardamos para enviarlo al MVC
             }
 
             return Ok(votante);

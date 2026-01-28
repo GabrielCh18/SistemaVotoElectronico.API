@@ -16,41 +16,74 @@ namespace SistemaVotoElectronico.API.Controllers
             _context = context;
         }
 
-        // --- CORRECCIÓN AQUÍ ---
-        // Agregamos 'int procesoElectoralId' para saber a qué elección pertenece el voto
         [HttpPost("registrar-voto")]
-        public async Task<IActionResult> RegistrarVoto(string cedula, string codigo, int candidatoId, int procesoElectoralId)
+        public async Task<IActionResult> RegistrarVoto(
+            string cedula,
+            string codigo,
+            int candidatoId,
+            int procesoElectoralId)
         {
-            // 1. Validaciones de Token
+            var ahora = DateTime.UtcNow;
+
+            // 1️⃣ Validar proceso electoral activo y dentro del horario
+            var proceso = await _context.ProcesoElectorales
+                .Include(p => p.Candidatos)
+                .FirstOrDefaultAsync(p =>
+                    p.Id == procesoElectoralId &&
+                    p.Activo &&
+                    p.FechaInicio <= ahora &&
+                    p.FechaFin >= ahora
+                );
+
+            if (proceso == null)
+                return BadRequest("No existe un proceso electoral activo o está fuera del horario permitido.");
+
+            // 2️⃣ Validar que el candidato pertenezca al proceso
+            bool candidatoValido = proceso.Candidatos
+                .Any(c => c.Id == candidatoId);
+
+            if (!candidatoValido)
+                return BadRequest("El candidato no pertenece a este proceso electoral.");
+
+            // 3️⃣ Validar token
             var token = await _context.Tokens
-                .FirstOrDefaultAsync(t => t.CodigoUnico == codigo && !t.FueUsado);
+                .FirstOrDefaultAsync(t =>
+                    t.CodigoUnico == codigo &&
+                    !t.FueUsado &&
+                    t.FechaExpiracion >= ahora
+                );
 
-            if (token == null) return BadRequest("Código inválido o ya usado.");
-            if (token.FechaExpiracion < DateTime.UtcNow) return BadRequest("El código ha expirado.");
+            if (token == null)
+                return BadRequest("Código inválido, usado o expirado.");
 
-            // 2. Validaciones de Votante
-            var votante = await _context.Votantes.FirstOrDefaultAsync(v => v.Cedula == cedula);
+            // 4️⃣ Validar votante
+            var votante = await _context.Votantes
+                .FirstOrDefaultAsync(v => v.Cedula == cedula);
 
-            // Verificamos que el votante exista y que el token sea SUYO
-            if (votante == null) return BadRequest("Ciudadano no encontrado.");
-            if (token.VotanteId != votante.Id) return BadRequest("Este código no pertenece a esta cédula.");
-            if (votante.YaVoto) return BadRequest("El ciudadano ya votó.");
+            if (votante == null)
+                return BadRequest("Ciudadano no encontrado.");
 
-            // 3. Crear el voto
-            // ... dentro del método de guardar voto ...
+            if (token.VotanteId != votante.Id)
+                return BadRequest("Este código no pertenece a esta cédula.");
 
+            // 5️⃣ Verificar si ya votó en ESTE proceso electoral
+            bool yaVotoEnProceso = await _context.Votos.AnyAsync(v =>
+                v.IdVotante == votante.Id &&
+                v.ProcesoElectoralId == procesoElectoralId
+            );
+
+            if (yaVotoEnProceso)
+                return BadRequest("El ciudadano ya votó en este proceso electoral.");
+
+            // 6️⃣ Registrar el voto
             var nuevoVoto = new Voto
             {
                 IdVotante = votante.Id,
                 CandidatoId = candidatoId,
                 ProcesoElectoralId = procesoElectoralId,
-
-                // 👇 ASEGÚRATE QUE DIGA ESTO:
-                FechaVoto = DateTime.Now
+                FechaVoto = ahora
             };
 
-            // 4. Actualizar estados
-            votante.YaVoto = true;
             token.FueUsado = true;
 
             _context.Votos.Add(nuevoVoto);

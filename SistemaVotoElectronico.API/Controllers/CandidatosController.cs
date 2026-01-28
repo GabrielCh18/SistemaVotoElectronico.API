@@ -30,18 +30,24 @@ namespace SistemaVotoElectronico.API.Controllers
         [HttpPost]
         public async Task<ActionResult<Candidato>> PostCandidato(Candidato candidato)
         {
-            // Validamos que el proceso exista
-            var proceso = await _context.ProcesoElectorales.FindAsync(candidato.ProcesoElectoralId);
-            if (proceso == null)
-            {
-                return BadRequest("El proceso electoral especificado no existe.");
-            }
+            // 🔥 Buscar el proceso activo automáticamente
+            var procesoActivo = await _context.ProcesoElectorales
+                .Where(p => p.Activo)
+                .OrderByDescending(p => p.Id)
+                .FirstOrDefaultAsync();
+
+            if (procesoActivo == null)
+                return BadRequest("No hay un proceso electoral activo.");
+
+            // 💥 FORZAMOS el proceso correcto
+            candidato.ProcesoElectoralId = procesoActivo.Id;
 
             _context.Candidatos.Add(candidato);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCandidatosPorProceso", new { procesoId = candidato.ProcesoElectoralId }, candidato);
+            return Ok(candidato);
         }
+
         // DELETE: api/Candidatos/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCandidato(int id)

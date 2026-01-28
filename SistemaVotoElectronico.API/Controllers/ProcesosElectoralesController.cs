@@ -16,31 +16,64 @@ namespace SistemaVotoElectronico.API.Controllers
             _context = context;
         }
 
-        // GET: Ver todos los procesos
+        // GET: todos los procesos
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProcesoElectoral>>> GetProcesos()
         {
-            return await _context.ProcesoElectorales.ToListAsync();
+            return await _context.ProcesoElectorales
+                .Include(p => p.Candidatos)
+                .ToListAsync();
         }
 
-        // POST: Crear una nueva elección
-        [HttpPost]
-        public async Task<ActionResult<ProcesoElectoral>> PostProceso(ProcesoElectoral proceso)
+        // GET: proceso activo y en horario
+        [HttpGet("activo")]
+        public async Task<ActionResult<ProcesoElectoral>> GetProcesoActivo()
         {
+            var ahora = DateTime.Now;
+
+            var proceso = await _context.ProcesoElectorales
+                .Include(p => p.Candidatos)
+                .FirstOrDefaultAsync(p =>
+                    p.Activo &&
+                    p.FechaInicio <= ahora &&
+                    p.FechaFin >= ahora
+                );
+
+            if (proceso == null)
+                return NotFound("No existe un proceso electoral activo en este momento.");
+
+            return Ok(proceso);
+        }
+
+        // POST: crear proceso electoral
+        [HttpPost]
+        public async Task<ActionResult> PostProceso(ProcesoElectoral proceso)
+        {
+            // Validación de fechas
+            if (proceso.FechaInicio >= proceso.FechaFin)
+            {
+                return BadRequest("La fecha de inicio debe ser menor a la fecha de fin.");
+            }
+
             _context.ProcesoElectorales.Add(proceso);
             await _context.SaveChangesAsync();
-            return CreatedAtAction("GetProcesos", new { id = proceso.Id }, proceso);
+
+            return Ok(proceso);
         }
 
-        // GET: Solo los activos (para que la app sepa cuál mostrar)
-        [HttpGet("activos")]
-        public async Task<ActionResult<IEnumerable<ProcesoElectoral>>> GetProcesosActivos()
+        // PUT: cerrar proceso manualmente
+        [HttpPut("cerrar/{id}")]
+        public async Task<IActionResult> CerrarProceso(int id)
         {
-            var hoy = DateTime.UtcNow;
-            // Traemos los que estén marcados como activos
-            return await _context.ProcesoElectorales
-                .Where(p => p.Activo)
-                .ToListAsync();
+            var proceso = await _context.ProcesoElectorales.FindAsync(id);
+
+            if (proceso == null)
+                return NotFound();
+
+            proceso.Activo = false;
+            await _context.SaveChangesAsync();
+
+            return Ok("Proceso cerrado correctamente");
         }
     }
 }

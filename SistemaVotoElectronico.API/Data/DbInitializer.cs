@@ -10,10 +10,11 @@ namespace SistemaVotoElectronico.API.Data
         {
             context.Database.EnsureCreated();
 
-            // Si ya hay votantes, no hacemos nada para evitar duplicados
-            if (context.Votantes.Any()) return;
+            // Evitar duplicados
+            if (context.Votantes.Any())
+                return;
 
-            // 1. Ubicación (Provincia -> Canton -> Parroquia -> Zona)
+            // 1️⃣ Ubicación
             var prov = new Provincia { Nombre = "Imbabura" };
             context.Provincias.Add(prov);
             context.SaveChanges();
@@ -29,40 +30,66 @@ namespace SistemaVotoElectronico.API.Data
             var zon = new Zona
             {
                 Nombre = "Zona UTN",
-                Direccion = "Av. 17 de Julio, Ibarra", // Obligatorio según tu modelo
+                Direccion = "Av. 17 de Julio, Ibarra",
                 ParroquiaId = par.Id
             };
             context.Zonas.Add(zon);
             context.SaveChanges();
 
-            // 2. Junta (Mesa)
-            var jun = new Junta { Numero = 1, Genero = "Masculino", ZonaId = zon.Id };
+            // 2️⃣ Junta
+            var jun = new Junta
+            {
+                Numero = 1,
+                Genero = "Masculino",
+                ZonaId = zon.Id
+            };
             context.Juntas.Add(jun);
             context.SaveChanges();
 
-            // 3. Votante (Cédula: 1004567890)
-            var v1 = new Votante
+            // 3️⃣ Votante (SIN YaVoto)
+            var votante = new Votante
             {
                 Nombre = "Juan",
-                Apellido = "Perez", // Obligatorio según tu modelo
+                Apellido = "Perez",
                 Cedula = "1004567890",
-                YaVoto = false,
                 JuntaId = jun.Id
             };
-            context.Votantes.Add(v1);
+            context.Votantes.Add(votante);
 
-            // 4. Candidatos
+            // 4️⃣ Candidatos
             context.Candidatos.AddRange(
-                new Candidato { Nombre = "Candidato A", PartidoPolitico = "Frente UTN", Dignidad = "Presidente", FotoUrl = "..." },
-                new Candidato { Nombre = "Candidato B", PartidoPolitico = "Alianza Estudiantil", Dignidad = "Presidente", FotoUrl = "..." },
-
-    // OPCIONES ESPECIALES
-                new Candidato { Nombre = "Voto en Blanco", PartidoPolitico = "N/A", Dignidad = "N/A", FotoUrl = "blanco.jpg" },
-                new Candidato { Nombre = "Voto Nulo", PartidoPolitico = "N/A", Dignidad = "N/A", FotoUrl = "nulo.jpg" }
+                new Candidato
+                {
+                    Nombre = "Candidato A",
+                    PartidoPolitico = "Frente UTN",
+                    Dignidad = "Presidente",
+                    FotoUrl = "a.jpg"
+                },
+                new Candidato
+                {
+                    Nombre = "Candidato B",
+                    PartidoPolitico = "Alianza Estudiantil",
+                    Dignidad = "Presidente",
+                    FotoUrl = "b.jpg"
+                },
+                new Candidato
+                {
+                    Nombre = "Voto en Blanco",
+                    PartidoPolitico = "N/A",
+                    Dignidad = "N/A",
+                    FotoUrl = "blanco.jpg"
+                },
+                new Candidato
+                {
+                    Nombre = "Voto Nulo",
+                    PartidoPolitico = "N/A",
+                    Dignidad = "N/A",
+                    FotoUrl = "nulo.jpg"
+                }
             );
 
             context.SaveChanges();
-            System.Console.WriteLine("--> Base de datos poblada con éxito.");
+            System.Console.WriteLine("✅ Base de datos poblada con éxito.");
         }
     }
 }

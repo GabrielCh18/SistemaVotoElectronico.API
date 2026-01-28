@@ -1,0 +1,20 @@
+﻿@model SistemaVoto.Modelos.ProcesoElectoral
+
+<h2>➕ Nuevo Proceso Electoral</h2>
+
+<form asp-action="Create" method="post">
+    <label>Nombre</label>
+    <input asp-for="Nombre" class="form-control" />
+
+    <label>Descripción</label>
+    <input asp-for="Descripcion" class="form-control" />
+
+    <label>Inicio</label>
+    <input asp-for="FechaInicio" type="datetime-local" class="form-control" />
+
+    <label>Fin</label>
+    <input asp-for="FechaFin" type="datetime-local" class="form-control" />
+
+    <br />
+    <button class="btn btn-success">Crear Proceso</button>
+</form>

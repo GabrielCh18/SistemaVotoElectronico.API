@@ -8,19 +8,21 @@ namespace SistemaVoto.Modelos
         [Key]
         public int Id { get; set; }
 
-        // 👇 ¡AQUÍ ESTÁ EL ERROR! Debe llamarse 'FechaVoto'
-        public DateTime FechaVoto { get; set; }
+        public DateTime FechaVoto { get; set; } = DateTime.Now;
 
+        // 🔹 Votante
         public int IdVotante { get; set; }
-        [ForeignKey("IdVotante")]
+        [ForeignKey(nameof(IdVotante))]
         public Votante? Votante { get; set; }
 
-        public int? CandidatoId { get; set; }
-        [ForeignKey("CandidatoId")]
+        // 🔹 Candidato
+        public int CandidatoId { get; set; }
+        [ForeignKey(nameof(CandidatoId))]
         public Candidato? Candidato { get; set; }
 
+        // 🔹 Proceso Electoral
         public int ProcesoElectoralId { get; set; }
-        [ForeignKey("ProcesoElectoralId")]
+        [ForeignKey(nameof(ProcesoElectoralId))]
         public ProcesoElectoral? ProcesoElectoral { get; set; }
     }
 }

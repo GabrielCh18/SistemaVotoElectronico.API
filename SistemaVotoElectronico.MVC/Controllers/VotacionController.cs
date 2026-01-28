@@ -13,84 +13,121 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
-        // 1. PANTALLA DE INGRESO (LOGIN)
+        // 1️⃣ LOGIN
         public IActionResult Index()
         {
             return View();
         }
 
-        // 2. VALIDAR CREDENCIALES
+        // 2️⃣ VALIDAR INGRESO
         [HttpPost]
         public async Task<IActionResult> Ingresar(string cedula, string codigo)
         {
-            // Preguntamos a la API
-            var respuesta = await _apiService.GetAsync<Votante>($"Votantes/buscar/{cedula}");
+            // 🔍 Consultar proceso activo
+            var procesoActivo = await _apiService
+                .GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
 
-            // CASO 1: FALLÓ LA CONEXIÓN O LA API DIO ERROR
-            if (!respuesta.Success)
+            if (!procesoActivo.Success)
             {
-                // Aquí veremos si es culpa del SSL, del Puerto o de la API
-                ViewBag.Error = $"🔥 ERROR DE CONEXIÓN: {respuesta.Message}";
+                ViewBag.Error = "🔥 Error al consultar el proceso electoral.";
                 return View("Index");
             }
 
-            // CASO 2: CONECTÓ PERO NO TRAJO DATOS
-            if (respuesta.Data == null)
+            if (procesoActivo.Data == null)
             {
-                ViewBag.Error = "❌ La API respondió bien, pero el votante venía vacío (null).";
+                var procesos = await _apiService
+                    .GetListAsync<ProcesoElectoral>("ProcesosElectorales");
+
+                if (procesos.Data != null && procesos.Data.Any())
+                {
+                    var ultimo = procesos.Data
+                        .OrderByDescending(p => p.FechaInicio)
+                        .First();
+
+                    var ahora = DateTime.UtcNow;
+
+                    if (ahora < ultimo.FechaInicio)
+                    {
+                        ViewBag.Error =
+                            $"⏰ La votación inicia el {ultimo.FechaInicio:dd/MM/yyyy} a las {ultimo.FechaInicio:HH:mm}.";
+                    }
+                    else
+                    {
+                        ViewBag.Error = "🚫 El proceso electoral ya fue cerrado.";
+                    }
+                }
+                else
+                {
+                    ViewBag.Error = "❌ No existen procesos electorales registrados.";
+                }
+
                 return View("Index");
             }
 
-            // CASO 3: YA VOTÓ
-            if (respuesta.Data.YaVoto)
+            // 🔹 Validar votante (SOLO existencia)
+            var votante = await _apiService
+                .GetAsync<Votante>($"Votantes/buscar/{cedula}");
+
+            if (!votante.Success)
             {
-                ViewBag.Error = "⚠️ Este ciudadano ya ejerció su voto.";
+                ViewBag.Error = $"🔥 ERROR DE CONEXIÓN: {votante.Message}";
                 return View("Index");
             }
 
-            // SI LLEGAMOS AQUÍ, TODO ESTÁ PERFECTO
+            if (votante.Data == null)
+            {
+                ViewBag.Error = "❌ Votante no encontrado.";
+                return View("Index");
+            }
+
+            // ⚠️ YA NO SE VALIDA YaVoto AQUÍ
+
+            // Guardar datos para el flujo
             TempData["Cedula"] = cedula;
             TempData["Codigo"] = codigo;
+            TempData["ProcesoId"] = procesoActivo.Data.Id;
+
             return RedirectToAction("Papeleta");
         }
 
-        // 3. PANTALLA DE PAPELETA (CANDIDATOS)
+        // 3️⃣ PAPELETA
         public async Task<IActionResult> Papeleta()
         {
-            // Recuperamos los datos (si se pierden, volver al login)
-            if (TempData["Cedula"] == null) return RedirectToAction("Index");
-            TempData.Keep(); // Mantener los datos para el siguiente paso (Votar)
+            if (TempData["Cedula"] == null)
+                return RedirectToAction("Index");
 
-            // Traemos los candidatos de la elección #1
-            var respuesta = await _apiService.GetListAsync<Candidato>("Candidatos/por-proceso/1");
-            return View(respuesta.Data);
+            TempData.Keep();
+
+            int procesoId = (int)TempData["ProcesoId"];
+
+            var candidatos = await _apiService
+                .GetListAsync<Candidato>($"Candidatos/por-proceso/{procesoId}");
+
+            return View(candidatos.Data);
         }
 
-        // 4. ACCIÓN DE VOTAR
+        // 4️⃣ VOTAR
         [HttpPost]
         public async Task<IActionResult> Votar(int candidatoId)
         {
             var cedula = TempData["Cedula"]?.ToString();
             var codigo = TempData["Codigo"]?.ToString();
-            int procesoId = 1; // Elección 2026
+            int procesoId = (int)TempData["ProcesoId"];
 
-            // Enviamos el voto a la API
-            // Nota: Enviamos los datos en la URL porque así lo espera tu controlador actual
-            string url = $"Votos/registrar-voto?cedula={cedula}&codigo={codigo}&candidatoId={candidatoId}&procesoElectoralId={procesoId}";
+            string url =
+                $"Votos/registrar-voto?cedula={cedula}&codigo={codigo}&candidatoId={candidatoId}&procesoElectoralId={procesoId}";
 
             var respuesta = await _apiService.PostAsync<object>(url, null);
 
             if (respuesta.Success)
-            {
                 return RedirectToAction("Exito");
-            }
-            else
-            {
-                ViewBag.Error = "❌ Error al votar: " + respuesta.Message;
-                // Recargamos los candidatos para que intente de nuevo
-                var candidatos = await _apiService.GetListAsync<Candidato>("Candidatos/por-proceso/1");
-                return View("Papeleta", candidatos.Data);
-            }
+
+            ViewBag.Error = respuesta.Message;
+
+            var candidatos = await _apiService
+                .GetListAsync<Candidato>($"Candidatos/por-proceso/{procesoId}");
+
+            return View("Papeleta", candidatos.Data);
         }
 
         public IActionResult Exito()

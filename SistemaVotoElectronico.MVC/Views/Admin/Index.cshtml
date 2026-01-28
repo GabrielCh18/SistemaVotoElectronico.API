@@ -1,0 +1,32 @@
+﻿@model List<SistemaVoto.Modelos.ProcesoElectoral>
+
+<h2>📋 Procesos Electorales</h2>
+
+<table class="table">
+    <tr>
+        <th>Nombre</th>
+        <th>Inicio</th>
+        <th>Fin</th>
+        <th>Estado</th>
+        <th>Acción</th>
+    </tr>
+
+    @foreach (var p in Model)
+    {
+        <tr>
+            <td>@p.Nombre</td>
+            <td>@p.FechaInicio</td>
+            <td>@p.FechaFin</td>
+            <td>@(p.Activo ? "Activo" : "Cerrado")</td>
+            <td>
+                @if (p.Activo)
+                {
+                    <a asp-action="Cerrar" asp-route-id="@p.Id"
+                       class="btn btn-danger btn-sm">
+                        Cerrar
+                    </a>
+                }
+            </td>
+        </tr>
+    }
+</table>

@@ -29,6 +29,13 @@ namespace SistemaVotoElectronico.API.Data
 
             // El código de votación también debe ser único
             modelBuilder.Entity<TokenVotacion>().HasIndex(t => t.CodigoUnico).IsUnique();
+
+            // 🔥 RELACIÓN PROCESO ELECTORAL → CANDIDATOS
+            modelBuilder.Entity<Candidato>()
+                .HasOne(c => c.ProcesoElectoral)
+                .WithMany(p => p.Candidatos)
+                .HasForeignKey(c => c.ProcesoElectoralId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
         public DbSet<ProcesoElectoral> ProcesoElectorales { get; set; }
     }

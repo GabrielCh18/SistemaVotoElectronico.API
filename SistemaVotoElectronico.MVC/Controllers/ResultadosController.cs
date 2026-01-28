@@ -15,24 +15,25 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // 1. Preguntar a la API qué elección está activa
-            var procesosResp = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
+            // 🔥 1. Obtener el proceso ACTIVO REAL (con validación de horario)
+            var procesoResp = await _apiService
+                .GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
 
-            // Buscamos el activo
-            var activo = procesosResp.Data?.FirstOrDefault(p => p.Activo);
-
-            if (activo != null)
+            if (!procesoResp.Success || procesoResp.Data == null)
             {
-                // 2. Pedimos resultados de ESA elección específica
-                var respuesta = await _apiService.GetAsync<ResumenGeneral>($"Resultados/{activo.Id}");
-
-                if (respuesta.Success)
-                {
-                    return View(respuesta.Data);
-                }
+                ViewBag.Error = "No hay un proceso electoral activo en este momento.";
+                return View(new ResumenGeneral());
             }
 
-            // Si no hay elección o falló
+            // 🔥 2. Pedimos resultados de ESE proceso
+            var respuesta = await _apiService
+                .GetAsync<ResumenGeneral>($"Resultados/{procesoResp.Data.Id}");
+
+            if (respuesta.Success)
+            {
+                return View(respuesta.Data);
+            }
+
             ViewBag.Error = "No hay resultados disponibles en este momento.";
             return View(new ResumenGeneral());
         }

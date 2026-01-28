@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using SistemaVotoElectronico.ApiConsumer;
 using SistemaVoto.Modelos;
 
@@ -13,58 +14,62 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
-        public async Task<IActionResult> Index(int? procesoId)
+        public async Task<IActionResult> Index(int? procesoId, int? provinciaId, int? cantonId, int? parroquiaId)
         {
             ProcesoElectoral proceso = null;
 
-            // CASO 1: Vienes del Historial (Traes ID específico)
+            // --- LÓGICA PARA ELEGIR EL PROCESO ---
             if (procesoId.HasValue)
             {
+                // Si vienes del Historial
                 var result = await _apiService.GetAsync<ProcesoElectoral>($"ProcesosElectorales/{procesoId}");
                 if (result.Success) proceso = result.Data;
             }
             else
             {
-                // CASO 2: Vienes del Menú o del Usuario (No traes ID)
-
-                // A. Intentamos buscar uno ACTIVO
+                // Si vienes directo (Buscamos Activo o Último Cerrado)
                 var activoResp = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
-
                 if (activoResp.Success && activoResp.Data != null)
                 {
                     proceso = activoResp.Data;
                 }
                 else
                 {
-                    // B. 🔥 EL TRUCO: Si no hay activo, buscamos el ÚLTIMO CERRADO
                     var listaResp = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
-
                     if (listaResp.Success && listaResp.Data != null)
                     {
-                        // Ordenamos por fecha fin descendente (el más reciente primero) y tomamos el 1ro
-                        proceso = listaResp.Data
-                            .OrderByDescending(p => p.FechaFin)
-                            .FirstOrDefault();
+                        proceso = listaResp.Data.OrderByDescending(p => p.FechaFin).FirstOrDefault();
                     }
                 }
             }
 
+            // --- CARGAMOS LAS PROVINCIAS PARA EL FILTRO ---
+            var provsResp = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
+            ViewBag.Provincias = new SelectList(provsResp.Data ?? new List<Provincia>(), "Id", "Nombre", provinciaId);
+
+            // Guardamos selección actual para que JavaScript sepa qué mostrar
+            ViewBag.ProvinciaId = provinciaId;
+            ViewBag.CantonId = cantonId;
+            ViewBag.ParroquiaId = parroquiaId;
+            ViewBag.ProcesoId = proceso?.Id;
+
             if (proceso == null)
             {
-                ViewBag.Error = "No se encontraron elecciones registradas en el sistema.";
-                return View(new ResumenGeneral()); // Modelo vacío para no romper la vista
+                ViewBag.Error = "No se encontraron elecciones registradas.";
+                return View(new ResumenGeneral());
             }
 
-            // Guardamos el nombre para mostrarlo en la vista
             ViewBag.NombreProceso = $"Elecciones del {proceso.FechaInicio:dd/MM/yyyy}";
 
-            // Pedimos los resultados al API usando el ID que encontramos (sea activo, cerrado o especifico)
-            var respuesta = await _apiService.GetAsync<ResumenGeneral>($"Resultados/{proceso.Id}");
+            // --- LLAMADA AL API CON FILTROS ---
+            string url = $"Resultados/{proceso.Id}?dummy=1"; // Truco para concatenar fácil
+            if (provinciaId.HasValue) url += $"&provinciaId={provinciaId}";
+            if (cantonId.HasValue) url += $"&cantonId={cantonId}";
+            if (parroquiaId.HasValue) url += $"&parroquiaId={parroquiaId}";
 
-            if (respuesta.Success)
-            {
-                return View(respuesta.Data);
-            }
+            var respuesta = await _apiService.GetAsync<ResumenGeneral>(url);
+
+            if (respuesta.Success) return View(respuesta.Data);
 
             ViewBag.Error = "No se pudieron cargar los datos del conteo.";
             return View(new ResumenGeneral());

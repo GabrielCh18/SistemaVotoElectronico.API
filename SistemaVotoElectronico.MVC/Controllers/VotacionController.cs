@@ -16,7 +16,10 @@ namespace SistemaVotoElectronico.MVC.Controllers
         // 1️⃣ PANTALLA DE INGRESO
         public IActionResult Index()
         {
-            HttpContext.Session.Clear(); // Limpiamos sesión al entrar
+            // Limpieza selectiva para no sacar al Jefe
+            HttpContext.Session.Remove("Cedula");
+            HttpContext.Session.Remove("Codigo");
+            HttpContext.Session.Remove("ProcesoId");
             return View();
         }
 
@@ -48,7 +51,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             var votante = response.Data;
 
-            // 🔐 VALIDACIÓN DEL TOKEN (Aquí comparamos con lo que mandó la API)
+            // Validar Token
             if (votante.Token != codigo)
             {
                 ViewBag.Error = "⛔ Código incorrecto o caducado.";
@@ -61,7 +64,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
                 return View("Index");
             }
 
-            // ✅ GUARDAR EN SESIÓN (Seguro)
+            // Guardar sesión
             HttpContext.Session.SetString("Cedula", cedula);
             HttpContext.Session.SetString("Codigo", codigo);
             HttpContext.Session.SetInt32("ProcesoId", proceso.Data.Id);
@@ -75,9 +78,19 @@ namespace SistemaVotoElectronico.MVC.Controllers
             var cedula = HttpContext.Session.GetString("Cedula");
             var pid = HttpContext.Session.GetInt32("ProcesoId");
 
+            // 🛡️ FIX 1: Validar también que pid no sea nulo
             if (cedula == null || pid == null) return RedirectToAction("Index");
 
             var candidatos = await _apiService.GetListAsync<Candidato>($"Candidatos/por-proceso/{pid}");
+
+            // 🛡️ FIX 2: EL PARACAÍDAS ANTI-CRASH
+            // Si la API falla y devuelve null, no dejamos que la vista explote.
+            if (!candidatos.Success || candidatos.Data == null)
+            {
+                ViewBag.Error = "⚠️ Error cargando la papeleta. Intente ingresar nuevamente.";
+                return View("Index"); // Volvemos al login en vez de explotar
+            }
+
             return View(candidatos.Data);
         }
 
@@ -85,13 +98,12 @@ namespace SistemaVotoElectronico.MVC.Controllers
         [HttpPost]
         public async Task<IActionResult> Votar(int candidatoId)
         {
-            // Recuperamos datos de sesión
             var cedula = HttpContext.Session.GetString("Cedula");
             var codigo = HttpContext.Session.GetString("Codigo");
             var pid = HttpContext.Session.GetInt32("ProcesoId");
 
-            // Si se perdió la sesión (doble clic), volvemos al inicio suavemente
-            if (cedula == null || codigo == null) return RedirectToAction("Index");
+            // 🛡️ FIX 3: Validar pid aquí también
+            if (cedula == null || codigo == null || pid == null) return RedirectToAction("Index");
 
             string url = $"Votos/registrar-voto?cedula={cedula}&codigo={codigo}&candidatoId={candidatoId}&procesoElectoralId={pid}";
 
@@ -99,14 +111,28 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             if (resultado.Success)
             {
-                HttpContext.Session.Clear(); // Borramos sesión para evitar regresar
+                // Limpieza selectiva (Mantiene al Jefe vivo)
+                HttpContext.Session.Remove("Cedula");
+                HttpContext.Session.Remove("Codigo");
+                HttpContext.Session.Remove("ProcesoId");
+
                 return RedirectToAction("Exito");
             }
             else
             {
+                // Hubo error al votar (ej. ya votó), intentamos recargar la papeleta
                 ViewBag.Error = resultado.Message;
-                // Recargamos candidatos para mostrar el error en la misma pantalla
+
                 var cand = await _apiService.GetListAsync<Candidato>($"Candidatos/por-proceso/{pid}");
+
+                // 🛡️ FIX 4: PROTECCIÓN DOBLE
+                // Si al intentar mostrar el error, TAMBIÉN falla la carga de candidatos...
+                if (!cand.Success || cand.Data == null)
+                {
+                    ViewBag.Error = "❌ Error crítico: " + resultado.Message;
+                    return View("Index"); // Sacamos al usuario por seguridad
+                }
+
                 return View("Papeleta", cand.Data);
             }
         }

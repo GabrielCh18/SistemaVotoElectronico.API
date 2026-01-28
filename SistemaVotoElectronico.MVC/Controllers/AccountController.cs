@@ -30,8 +30,11 @@ namespace SistemaVotoElectronico.MVC.Controllers
         // SALIR
         public IActionResult Logout()
         {
-            HttpContext.Session.Clear(); // Borrar sesión
-            return RedirectToAction("Index", "Home");
+            // 1. Borramos la sesión
+            HttpContext.Session.Clear();
+
+            // 2. Redirigimos AL MISMO LOGIN (En vez de al Home)
+            return RedirectToAction("Login");
         }
     }
 }

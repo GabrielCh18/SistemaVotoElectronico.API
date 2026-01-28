@@ -2,10 +2,11 @@
 @{
     string ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
 
-    // ZONA PÚBLICA: Home y Resultados (Aquí el Admin es invisible)
+    // 🛡️ ZONA PÚBLICA (Modo Camuflaje para PDF)
+    // Si estamos en Home o Resultados, el Admin es invisible.
     bool esZonaPublica = (ctrl == "Home" || ctrl == "Resultados");
 
-    // ZONA JEFE
+    // 🛡️ ZONA JEFE
     bool esZonaJefe = (ctrl == "JefeMesa");
 }
 
@@ -18,7 +19,6 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SistemaVotoElectronico.MVC.styles.css" asp-append-version="true" />
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -61,7 +61,6 @@
                                     </a>
                                 </li>
                             }
-
                         }
 
                         else if (esZonaJefe || (Context.Session.GetString("JefeLogueado") != null && Context.Session.GetString("UsuarioAdmin") == null))
@@ -86,9 +85,13 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
                                     <li><h6 class="dropdown-header text-danger">Control Electoral</h6></li>
+
+                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="Historial">📜 Historial / Cerrar</a></li>
+
                                     <li><a class="dropdown-item" asp-controller="Votaciones" asp-action="Index">🗳️ Elecciones</a></li>
                                     <li><a class="dropdown-item" asp-controller="Admin" asp-action="Candidatos">👤 Candidatos</a></li>
                                     <li><a class="dropdown-item fw-bold text-primary" asp-controller="Resultados" asp-action="Index">📊 Ver Resultados</a></li>
+
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header text-danger">Base de Datos</h6></li>
                                     <li><a class="dropdown-item" asp-controller="Votantes" asp-action="Crear">👥 Votantes</a></li>

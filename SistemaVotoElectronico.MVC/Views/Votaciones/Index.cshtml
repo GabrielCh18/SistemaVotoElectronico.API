@@ -1,0 +1,73 @@
+﻿@model List<SistemaVoto.Modelos.ProcesoElectoral>
+
+@{
+    ViewData["Title"] = "Gestión de Elecciones";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>🗳️ Gestión de Elecciones</h2>
+        <a class="btn btn-primary" asp-controller="Admin" asp-action="CrearProceso">
+            + Nueva Elección
+        </a>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success">@TempData["Mensaje"]</div>
+    }
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-6 mb-3">
+                <div class="card @(item.Activo ? "border-success shadow-lg" : "border-secondary")">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="card-title fw-bold">@item.Nombre</h5>
+                            @if (item.Activo)
+                            {
+                                <span class="badge bg-success">🟢 ACTIVA</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Cerrada</span>
+                            }
+                        </div>
+
+                        <p class="card-text mt-2">
+                            📅 <strong>Inicio:</strong> @item.FechaInicio.ToString("g") <br />
+                            🏁 <strong>Fin:</strong> @item.FechaFin.ToString("g")
+                        </p>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            @if (item.Activo)
+                            {
+                                <form asp-action="CambiarEstado" method="post" class="w-100">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="accion" value="cerrar" />
+                                    <button type="submit" class="btn btn-danger w-100 fw-bold"
+                                            onclick="return confirm('⚠️ ¿Seguro que deseas CERRAR esta elección?\nNadie más podrá votar.')">
+                                        🔒 CERRAR URNAS
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-secondary w-100" disabled>
+                                    👁️ Ver Resultados (Histórico)
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

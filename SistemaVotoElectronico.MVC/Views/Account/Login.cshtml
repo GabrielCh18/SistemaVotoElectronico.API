@@ -1,39 +1,54 @@
 ﻿@{
+    Layout = null;
     ViewData["Title"] = "Ingreso Administrativo";
 }
 
-<div class="container mt-5 pt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-primary text-white text-center py-3">
-                    <h3 class="mb-0">🔐 Acceso Administrativo</h3>
-                </div>
-                <div class="card-body p-4">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Sistema Voto</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-light">
 
-                    @if (ViewBag.Error != null)
-                    {
-                        <div class="alert alert-danger text-center">
-                            <i class="bi bi-exclamation-triangle-fill"></i> @ViewBag.Error
-                        </div>
-                    }
+    <div class="container mt-5 pt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-danger text-white text-center py-3">
+                        <h3 class="mb-0">⚙️ Acceso Admin</h3>
+                    </div>
+                    <div class="card-body p-4">
 
-                    <form asp-action="Login" method="post">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Usuario</label>
-                            <input type="text" name="usuario" class="form-control form-control-lg" placeholder="Gabriel / Andres" required autofocus />
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Contraseña</label>
-                            <input type="password" name="password" class="form-control form-control-lg" placeholder="••••••••" required />
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 btn-lg">Ingresar al Sistema</button>
-                    </form>
-                </div>
-                <div class="card-footer text-center bg-white border-0 pb-3">
-                    <a href="/" class="text-muted text-decoration-none">⬅ Volver al inicio</a>
+                        @if (ViewBag.Error != null)
+                        {
+                            <div class="alert alert-danger text-center">
+                                <strong>⚠️ Error:</strong> @ViewBag.Error
+                            </div>
+                        }
+
+                        <form asp-action="Login" method="post">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Usuario</label>
+                                <input type="text" name="usuario" class="form-control form-control-lg" placeholder="Usuario Admin" required autofocus />
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Contraseña</label>
+                                <input type="password" name="password" class="form-control form-control-lg" placeholder="••••••••" required />
+                            </div>
+                            <button type="submit" class="btn btn-danger w-100 btn-lg shadow-sm">Ingresar al Panel</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

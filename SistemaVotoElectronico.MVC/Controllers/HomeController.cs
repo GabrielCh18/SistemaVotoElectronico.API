@@ -26,15 +26,11 @@ namespace SistemaVotoElectronico.MVC.Controllers
             var procesoActivo = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
             bool hayEleccionEnCurso = (procesoActivo.Success && procesoActivo.Data != null);
 
-            // 2. Regla: Mostramos resultados si NO hay elección en curso (ya terminó)
-            //    O si el que está viendo es el ADMIN (él siempre puede ver)
-            bool esAdmin = HttpContext.Session.GetString("UsuarioAdmin") != null;
+            // ✅ CORRECCIÓN: Quitamos la excepción del Admin.
+            // Ahora la regla es estricta: Solo se ven resultados si NO hay elección en curso.
+            ViewBag.MostrarResultados = !hayEleccionEnCurso;
 
-            ViewBag.MostrarResultados = !hayEleccionEnCurso || esAdmin;
-
-            // --- FIN LÓGICA VISIBILIDAD ---
-
-            // (El resto de tu código de búsqueda sigue igual)
+            // (El resto del código de búsqueda sigue igual...)
             if (string.IsNullOrEmpty(cedula))
             {
                 return View();

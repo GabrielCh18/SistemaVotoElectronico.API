@@ -1,0 +1,52 @@
+﻿@model IEnumerable<SistemaVoto.Modelos.ProcesoElectoral>
+
+<div class="container mt-4">
+    <h2>Historial de Elecciones</h2>
+    <div class="mb-3">
+        <a asp-action="FinalizarActual" class="btn btn-danger btn-lg">
+            🚨 Finalizar Elección Activa y Ver Resultados
+        </a>
+        <a asp-action="CrearProceso" class="btn btn-primary btn-lg">Crear Nueva</a>
+    </div>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Fecha Inicio</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        @if (item.Activo)
+                        {
+                            <span class="badge bg-success">Activo</span>
+                        }
+                        else
+                        {
+
+                            <span class="badge bg-secondary">Cerrado</span>
+                        }
+                    </td>
+                    <td>
+                        <a asp-controller="Resultados" asp-action="Index" asp-route-procesoId="@item.Id"
+                           class="btn btn-info btn-sm">Ver Resultados</a>
+
+                        <a asp-action="EliminarProceso" asp-route-id="@item.Id"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('¿Seguro que quieres borrar este proceso y todos sus votos?');">
+                            Eliminar
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

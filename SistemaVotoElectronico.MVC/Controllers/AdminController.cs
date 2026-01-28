@@ -19,11 +19,9 @@ namespace SistemaVotoElectronico.MVC.Controllers
         // 1️⃣ LISTAR CANDIDATOS DEL PROCESO ACTIVO REAL
         public async Task<IActionResult> Candidatos()
         {
-            if (NoEsAdmin())
-                return RedirectToAction("Login", "Account");
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
 
-            var procesoActivo = await _apiService
-                .GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
+            var procesoActivo = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
 
             if (!procesoActivo.Success || procesoActivo.Data == null)
             {
@@ -31,8 +29,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
                 return View(new List<Candidato>());
             }
 
-            var respuesta = await _apiService
-                .GetListAsync<Candidato>($"Candidatos/por-proceso/{procesoActivo.Data.Id}");
+            var respuesta = await _apiService.GetListAsync<Candidato>($"Candidatos/por-proceso/{procesoActivo.Data.Id}");
 
             return View(respuesta.Success ? respuesta.Data : new List<Candidato>());
         }
@@ -41,11 +38,8 @@ namespace SistemaVotoElectronico.MVC.Controllers
         [HttpGet]
         public IActionResult CrearProceso()
         {
-            if (NoEsAdmin())
-                return RedirectToAction("Login", "Account");
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
 
-            // Si corres esto en local, DateTime.Now está bien.
-            // Si el MVC también está en Docker, mejor usar UtcNow.AddHours(-5) por seguridad.
             return View(new ProcesoElectoral
             {
                 FechaInicio = DateTime.Now,
@@ -58,8 +52,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
         [HttpPost]
         public async Task<IActionResult> CrearProceso(ProcesoElectoral proceso)
         {
-            if (NoEsAdmin())
-                return RedirectToAction("Login", "Account");
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
 
             if (proceso.FechaInicio >= proceso.FechaFin)
             {
@@ -67,7 +60,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
                 return View(proceso);
             }
 
-            // 🔒 Cerrar procesos activos anteriores
+            // 🔒 Cerrar procesos activos anteriores automáticamente
             var procesos = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
             var activos = procesos.Data?.Where(p => p.Activo).ToList();
 
@@ -75,7 +68,6 @@ namespace SistemaVotoElectronico.MVC.Controllers
             {
                 foreach (var p in activos)
                 {
-                    // Ahora esto funcionará porque cambiamos el API a [HttpPost]
                     await _apiService.PostAsync<object>($"ProcesosElectorales/cerrar/{p.Id}", null);
                 }
             }
@@ -118,7 +110,6 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             candidato.ProcesoElectoralId = procesoActivo.Data.Id;
 
-            // Quitamos validaciones del modelo que puedan estorbar si no vienen del form
             if (!ModelState.IsValid) return View(candidato);
 
             var respuesta = await _apiService.PostAsync<Candidato>("Candidatos", candidato);
@@ -138,6 +129,53 @@ namespace SistemaVotoElectronico.MVC.Controllers
             if (!respuesta.Success) TempData["Error"] = respuesta.Message;
 
             return RedirectToAction("Candidatos");
+        }
+
+        // =========================================================
+        // 🆕 FUNCIONES NUEVAS PARA EL HISTORIAL Y ELIMINAR
+        // =========================================================
+
+        // 5️⃣ HISTORIAL DE PROCESOS (Para ver viejos y borrar)
+        [HttpGet]
+        public async Task<IActionResult> Historial()
+        {
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
+
+            var response = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
+            // Ordenamos: El más reciente primero
+            var lista = response.Data?.OrderByDescending(p => p.FechaInicio).ToList() ?? new List<ProcesoElectoral>();
+
+            return View(lista);
+        }
+
+        // 6️⃣ ELIMINAR PROCESO (Borrado completo)
+        public async Task<IActionResult> EliminarProceso(int id)
+        {
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
+
+            // Llamamos al API para borrar
+            await _apiService.DeleteAsync($"ProcesosElectorales/{id}");
+
+            // Recargamos el historial
+            return RedirectToAction("Historial");
+        }
+
+        // 7️⃣ FINALIZAR ELECCIÓN ACTIVA (Cierra y lleva a resultados)
+        public async Task<IActionResult> FinalizarActual()
+        {
+            if (NoEsAdmin()) return RedirectToAction("Login", "Account");
+
+            // 1. Buscamos el activo
+            var activo = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
+
+            if (!activo.Success || activo.Data == null)
+                return RedirectToAction("Historial"); // Si no hay activo, vamos al historial
+
+            // 2. Lo cerramos
+            await _apiService.PostAsync<object>($"ProcesosElectorales/cerrar/{activo.Data.Id}", null);
+
+            // 3. Redirigimos a Resultados enviando el ID específico
+            return RedirectToAction("Index", "Resultados", new { procesoId = activo.Data.Id });
         }
     }
 }

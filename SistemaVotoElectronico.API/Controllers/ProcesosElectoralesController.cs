@@ -81,5 +81,17 @@ namespace SistemaVotoElectronico.API.Controllers
 
             return Ok("Proceso cerrado correctamente");
         }
+        // DELETE: Eliminar un proceso electoral (y sus votos/candidatos en cascada)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProceso(int id)
+        {
+            var proceso = await _context.ProcesoElectorales.FindAsync(id);
+            if (proceso == null) return NotFound();
+
+            _context.ProcesoElectorales.Remove(proceso);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }

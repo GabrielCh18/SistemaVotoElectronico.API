@@ -7,7 +7,6 @@
     bool estoyEnHome = (controladorActual == "Home");
 
     // BANDERA 2: ¿Estoy trabajando como Jefe de Mesa?
-    // Si el controlador es "JefeMesa", FUERZO la vista de Jefe.
     bool estoyEnMesa = (controladorActual == "JefeMesa");
 }
 
@@ -67,9 +66,7 @@
 
                         else if (estoyEnMesa || Context.Session.GetString("JefeLogueado") != null && Context.Session.GetString("UsuarioAdmin") == null)
                         {
-                            // Aquí entra si estoy en el controlador 'JefeMesa' O si solo soy Jefe.
-                            // Esto arregla el bug: Aunque seas Admin, si estás en Mesa, ves el menú de Mesa.
-
+                            // Menú del Jefe de Mesa
                             <li class="ms-auto"></li>
                             <li class="nav-item d-flex align-items-center bg-white border rounded px-3 py-1 shadow-sm">
                                 <span class="badge bg-primary me-2">MESA ACTIVA</span>
@@ -82,6 +79,7 @@
 
                         else if (Context.Session.GetString("UsuarioAdmin") != null)
                         {
+                            // 🔴 MENÚ DEL ADMINISTRADOR 🔴
                             <li class="ms-auto"></li>
 
                             <li class="nav-item dropdown">
@@ -90,6 +88,7 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
                                     <li><h6 class="dropdown-header text-danger">Control Electoral</h6></li>
+                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="Historial">📜 Historial / Cerrar</a></li>
                                     <li><a class="dropdown-item" asp-controller="Votaciones" asp-action="Index">🗳️ Elecciones</a></li>
                                     <li><a class="dropdown-item" asp-controller="Admin" asp-action="Candidatos">👤 Candidatos</a></li>
                                     <li><a class="dropdown-item" asp-controller="Resultados" asp-action="Index">📊 Resultados</a></li>

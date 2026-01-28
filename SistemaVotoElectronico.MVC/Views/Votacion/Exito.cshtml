@@ -1,6 +1,30 @@
-﻿<div class="text-center mt-5 pt-5">
+﻿@{
+    ViewData["Title"] = "Voto Registrado";
+    Layout = "~/Views/Shared/_LayoutVotacion.cshtml"; // 👈 Aquí también
+}
+
+<div class="text-center mt-5 pt-5">
     <h1 class="display-1 text-success">✅</h1>
-    <h2 class="display-4">¡Su voto ha sido registrado!</h2>
-    <p class="lead">Gracias por cumplir con su deber cívico.</p>
-    <a href="/Resultados" class="btn btn-primary mt-3">Ver Resultados en Vivo</a>
+    <h2 class="fw-bold">¡Su voto ha sido guardado!</h2>
+    <p class="lead mb-4">Gracias por cumplir con su deber cívico.</p>
+
+    <div class="alert alert-warning d-inline-block">
+        ⚠️ Esta pantalla se cerrará automáticamente en <span id="contador">10</span> segundos.
+    </div>
+
+    <div class="mt-4">
+        <a href="/" class="btn btn-outline-dark">Volver al Inicio</a>
+    </div>
 </div>
+
+<script>
+    // Pequeño script para redirigir al inicio automáticamente
+    let segundos = 10;
+    setInterval(function() {
+        segundos--;
+        document.getElementById("contador").innerText = segundos;
+        if (segundos <= 0) {
+            window.location.href = "/";
+        }
+    }, 1000);
+</script>

@@ -1,5 +1,9 @@
 ﻿@model List<SistemaVoto.Modelos.Candidato>
-
+@{
+    ViewData["Title"] = "Papeleta Electoral";
+    Layout = "~/Views/Shared/_LayoutVotacion.cshtml";
+}
+ 
 <div class="container text-center mt-4">
     <h1 class="mb-2">🗳️ Elija a su Presidente</h1>
     <p class="text-muted mb-5">Haga clic en el botón "Votar" de su candidato preferido.</p>

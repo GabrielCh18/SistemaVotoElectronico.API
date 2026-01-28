@@ -20,25 +20,36 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
         public async Task<IActionResult> Index(string? cedula)
         {
-            // 1. Si no escribieron nada, mostramos la página limpia solo con el buscador
+            // --- LÓGICA DE VISIBILIDAD DE RESULTADOS ---
+
+            // 1. Preguntamos a la API si hay un proceso activo
+            var procesoActivo = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
+            bool hayEleccionEnCurso = (procesoActivo.Success && procesoActivo.Data != null);
+
+            // 2. Regla: Mostramos resultados si NO hay elección en curso (ya terminó)
+            //    O si el que está viendo es el ADMIN (él siempre puede ver)
+            bool esAdmin = HttpContext.Session.GetString("UsuarioAdmin") != null;
+
+            ViewBag.MostrarResultados = !hayEleccionEnCurso || esAdmin;
+
+            // --- FIN LÓGICA VISIBILIDAD ---
+
+            // (El resto de tu código de búsqueda sigue igual)
             if (string.IsNullOrEmpty(cedula))
             {
                 return View();
             }
 
-            // 2. Si escribieron una cédula, preguntamos a la API
             var response = await _apiService.GetAsync<Votante>($"Votantes/buscar/{cedula}");
 
             if (response.Success)
             {
-                // ¡Lo encontramos! Mandamos los datos a la vista
                 return View(response.Data);
             }
             else
             {
-                // No existe o hubo error
                 ViewBag.Error = "⚠️ No encontramos esa cédula en el padrón electoral.";
-                ViewBag.CedulaBuscada = cedula; // Para mantener lo que escribió
+                ViewBag.CedulaBuscada = cedula;
                 return View();
             }
         }

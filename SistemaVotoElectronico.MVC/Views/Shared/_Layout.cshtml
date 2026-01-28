@@ -1,7 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Http
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -19,58 +18,73 @@
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                    <ul class="navbar-nav flex-grow-1 align-items-center">
 
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Inicio</a>
+                            <a class="nav-link text-dark fw-bold" asp-area="" asp-controller="Home" asp-action="Index">🏠 Inicio</a>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Votacion" asp-action="Index">🗳️ Ir a Votar</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link text-primary fw-bold" asp-controller="JefeMesa" asp-action="Login">👮‍♂️ Soy Jefe de Mesa</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Resultados" asp-action="Index">📊 Resultados</a>
-                        </li>
-
-                        @if (Context.Session.GetString("UsuarioAdmin") != null)
+                        @if (ViewBag.MostrarResultados == true)
                         {
-                            <li class="nav-item border-start ms-2 ps-2">
-                                <span class="nav-link disabled text-muted small">| ADMIN:</span>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link text-primary fw-bold" asp-controller="Votantes" asp-action="Crear">👥 Registrar Votante</a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Geografia" asp-action="Index">📍 Ubicaciones</a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link text-danger fw-bold" asp-controller="Admin" asp-action="Candidatos">⚙️ Panel Admin</a>
+                            <li class="nav-item ms-2">
+                                <a class="nav-link text-primary fw-bold border border-primary rounded px-3" asp-area="" asp-controller="Resultados" asp-action="Index">
+                                    📊 Ver Resultados
+                                </a>
                             </li>
                         }
 
-                        <li class="nav-item ms-auto">
-                            @if (Context.Session.GetString("UsuarioAdmin") != null)
-                            {
-                                <a class="nav-link text-danger border border-danger rounded px-3" asp-controller="Account" asp-action="Logout">
-                                    🚪 Salir
-                                </a>
-                            }
-                            else
-                            {
-                                <a class="nav-link text-success fw-bold border border-success rounded px-3" asp-controller="Account" asp-action="Login">
-                                    🔑 Ingreso Admin
-                                </a>
-                            }
-                        </li>
+                        <li class="ms-auto"></li>
+
+                        @if (Context.Session.GetString("JefeLogueado") != null)
+                        {
+                            // --- VISTA JEFE DE MESA ---
+                            <li class="nav-item d-flex align-items-center bg-light rounded px-2">
+                                <span class="badge bg-primary me-2">MESA ACTIVA</span>
+                                <a class="nav-link fw-bold text-dark" asp-controller="JefeMesa" asp-action="Index">Panel Mesa</a>
+                                <span class="mx-2 text-muted">|</span>
+                                <a class="btn btn-sm btn-outline-danger" asp-controller="JefeMesa" asp-action="Salir">Salir</a>
+                            </li>
+                        }
+                        else if (Context.Session.GetString("UsuarioAdmin") != null)
+                        {
+                            // --- VISTA ADMINISTRADOR ---
+                            <li class="nav-item border-start ms-3 ps-3">
+                                <span class="navbar-text text-danger small fw-bold me-2">ADMIN</span>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-danger fw-bold" href="#" data-bs-toggle="dropdown">⚙️ Gestión</a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                    <li><h6 class="dropdown-header">Control Electoral</h6></li>
+                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="Candidatos">Panel Principal</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Votaciones" asp-action="Index">Elecciones</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header">Base de Datos</h6></li>
+                                    <li><a class="dropdown-item" asp-controller="Votantes" asp-action="Index">Padrón Electoral</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Geografia" asp-action="Index">Geografía</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger fw-bold" asp-controller="Account" asp-action="Logout">🚪 Cerrar Sesión</a></li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            // --- ACCESO DISCRETO PARA FUNCIONARIOS ---
+                            <li class="nav-item">
+                                <div class="dropdown">
+                                    <button class="btn btn-link text-secondary text-decoration-none dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        🔐 Acceso Privado
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                                        <li><a class="dropdown-item" asp-controller="JefeMesa" asp-action="Login">👮‍♂️ Soy Jefe de Mesa</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Login">🔧 Soy Administrador</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                        }
+
                     </ul>
                 </div>
             </div>
@@ -84,7 +98,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - SistemaVotoElectronico.MVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - SistemaVotoElectronico.MVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

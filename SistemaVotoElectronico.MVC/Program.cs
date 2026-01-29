@@ -89,7 +89,7 @@ using (var scope = app.Services.CreateScope())
         // 2. Buscar tu usuario y darle el poder
         // ⚠️ CAMBIA ESTE CORREO POR EL QUE USASTE AL REGISTRARTE
         string emailAdmin = "arevalodany16@gmail.com";
-
+         
         var usuario = await userManager.FindByEmailAsync(emailAdmin);
 
         if (usuario != null)

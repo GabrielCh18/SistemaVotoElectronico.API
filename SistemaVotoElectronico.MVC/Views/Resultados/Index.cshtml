@@ -1,15 +1,18 @@
 ﻿@model SistemaVoto.Modelos.ResumenGeneral
 
-<div class="container mt-4">
+@{
+    ViewData["Title"] = "Resultados Electorales";
+}
 
-    <div class="card shadow-sm mb-4 border-primary">
+<div class="container mt-4 animate__animated animate__fadeIn">
+
+    <div class="card shadow-sm mb-4 border-primary d-print-none">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">🔍 Filtrar Resultados por Zona</h5>
             <a asp-controller="Home" asp-action="Index" class="btn btn-sm btn-light">🏠 Volver</a>
         </div>
         <div class="card-body bg-light">
             <form method="get" asp-action="Index" id="formFiltro" class="row g-3 align-items-end">
-
                 <input type="hidden" name="procesoId" value="@ViewBag.ProcesoId" />
 
                 <div class="col-md-3">
@@ -18,21 +21,18 @@
                         <option value="">-- Todas --</option>
                     </select>
                 </div>
-
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Cantón:</label>
                     <select id="cantonId" name="cantonId" class="form-select" disabled>
                         <option value="">-- Todos --</option>
                     </select>
                 </div>
-
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Parroquia:</label>
                     <select id="parroquiaId" name="parroquiaId" class="form-select" disabled>
                         <option value="">-- Todas --</option>
                     </select>
                 </div>
-
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary w-100">🔎 Filtrar</button>
                     <a href="@Url.Action("Index", new { procesoId = ViewBag.ProcesoId })" class="btn btn-outline-secondary">Limpiar</a>
@@ -42,59 +42,95 @@
     </div>
 
     <div class="text-end mb-3">
-        <button onclick="generarPDF()" class="btn btn-danger shadow-sm">📄 Descargar PDF</button>
+        <button onclick="generarPDF()" class="btn btn-danger shadow-sm d-print-none">📄 Descargar PDF</button>
     </div>
 
     <div id="area-impresion" class="p-4 bg-white border rounded shadow">
+
         <h2 class="text-center text-primary fw-bold mb-3">📊 Resultados Electorales</h2>
-        <p class="text-center text-muted">@(ViewBag.NombreProceso ?? "Reporte General")</p>
+        <p class="text-center text-muted mb-4">@(ViewBag.NombreProceso ?? "Reporte General")</p>
 
-        @if (Model != null && Model.Resultados != null && Model.Resultados.Any())
+        @if (Model != null)
         {
-            <div class="alert alert-info text-center">
-                Total Votos en esta zona: <strong>@Model.TotalVotos</strong> | Estado: <strong>@Model.Estado</strong>
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card text-white bg-primary mb-3 shadow-sm">
+                        <div class="card-header fw-bold text-center">👥 Padrón (Zona)</div>
+                        <div class="card-body text-center p-2">
+                            <h3 class="card-title mb-0">@Model.TotalEmpadronados</h3>
+                            <small>Inscritos</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-success mb-3 shadow-sm">
+                        <div class="card-header fw-bold text-center">🗳️ Votos (Zona)</div>
+                        <div class="card-body text-center p-2">
+                            <h3 class="card-title mb-0">@Model.TotalVotos</h3>
+                            <small>Participación</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-danger mb-3 shadow-sm">
+                        <div class="card-header fw-bold text-center">🚫 Ausentismo</div>
+                        <div class="card-body text-center p-2">
+                            <h3 class="card-title mb-0">@Model.PorcentajeAusentismo%</h3>
+                            <small>@Model.Ausentismo personas faltaron</small>
+                        </div>
+                    </div>
+                </div>
             </div>
+            @if (Model.Resultados != null && Model.Resultados.Any())
+            {
+                <div class="row justify-content-center">
+                    @foreach (var item in Model.Resultados)
+                    {
+                        var esGanador = item == Model.Resultados.First() && item.CantidadVotos > 0 && item.Partido != "Sistema";
+                        var esNulo = item.Partido == "Sistema";
+                        var colorBarra = esGanador ? "bg-success" : (esNulo ? "bg-secondary" : "bg-primary");
+                        var borde = esGanador ? "border-success border-2 shadow" : "shadow-sm";
 
-            <div class="row justify-content-center">
-                @foreach (var item in Model.Resultados)
-                {
-                    var esGanador = item == Model.Resultados.First() && item.CantidadVotos > 0 && item.Partido != "Sistema";
-                    var esNulo = item.Partido == "Sistema";
-                    var colorBarra = esGanador ? "bg-success" : (esNulo ? "bg-secondary" : "bg-primary");
-                    var borde = esGanador ? "border-success border-2" : "";
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 @borde">
+                                <div class="card-body text-center">
 
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm @borde">
-                            <div class="card-body text-center">
-                                <img src="@(string.IsNullOrEmpty(item.FotoUrl) ? "https://via.placeholder.com/100" : item.FotoUrl)"
-                                     class="rounded-circle mb-3 border" style="width: 100px; height: 100px; object-fit: cover;"
-                                     onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'">
+                                    <img src="@(string.IsNullOrEmpty(item.FotoUrl) ? "https://via.placeholder.com/100" : item.FotoUrl)"
+                                         class="rounded-circle mb-3 border p-1"
+                                         style="width: 100px; height: 100px; object-fit: cover;"
+                                         onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'">
 
-                                <h5 class="fw-bold">@item.Candidato</h5>
-                                @if (esGanador)
-                                {
-                                    <span class="badge bg-warning text-dark mb-2">🏆 GANADOR</span>
-                                }
-                                <p class="text-muted small">@item.Partido</p>
+                                    <h5 class="fw-bold text-truncate">@item.Candidato</h5>
 
-                                <h2 class="fw-bold my-2">@item.Porcentaje%</h2>
-                                <p>@item.CantidadVotos votos</p>
+                                    @if (esGanador)
+                                    {
+                                        <span class="badge bg-warning text-dark mb-2">🏆 GANADOR</span>
+                                    }
+                                    <p class="text-muted small text-uppercase">@item.Partido</p>
 
-                                <div class="progress" style="height: 20px;">
-                                    <div class="progress-bar @colorBarra progress-bar-striped progress-bar-animated"
-                                         role="progressbar" style="width: @item.Porcentaje.ToString().Replace(",", ".")%"></div>
+                                    <div class="bg-light rounded p-2 mt-2">
+                                        <h2 class="fw-bold my-1 text-dark">@item.Porcentaje%</h2>
+                                        <small class="text-muted">@item.CantidadVotos votos</small>
+                                    </div>
+
+                                    <div class="progress mt-3" style="height: 15px;">
+                                        <div class="progress-bar @colorBarra"
+                                             role="progressbar"
+                                             style="width: @item.Porcentaje.ToString().Replace(",", ".")%">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-warning text-center">
-                ⚠️ No hay votos registrados que coincidan con estos filtros.
-            </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning text-center mt-4">
+                    ⚠️ No hay votos registrados que coincidan con estos filtros.
+                </div>
+            }
         }
     </div>
 </div>
@@ -103,34 +139,27 @@
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 
 <script>
-    // Variables para recordar la selección si recargas la página
     var selProv = '@ViewBag.ProvinciaId';
     var selCant = '@ViewBag.CantonId';
     var selParr = '@ViewBag.ParroquiaId';
 
     $(document).ready(function () {
-        // Si hay filtros aplicados, recargamos los combos en cascada
-        if (selProv) {
-            cargarCantones(selProv, selCant);
-        }
+        if (selProv) cargarCantones(selProv, selCant);
 
-        // Cuando cambias Provincia...
         $("#provinciaId").change(function () {
             var id = $(this).val();
             $("#cantonId").empty().append('<option value="">-- Todos --</option>').prop('disabled', true);
-            $("#parroquiaId").empty().append('<option value="">-- Todas --</option>').prop('disabled', true);
+            $("#parroquiaId").empty().append('<option value="">-- Todos --</option>').prop('disabled', true);
             if (id) cargarCantones(id, null);
         });
 
-        // Cuando cambias Cantón...
         $("#cantonId").change(function () {
             var id = $(this).val();
-            $("#parroquiaId").empty().append('<option value="">-- Todas --</option>').prop('disabled', true);
+            $("#parroquiaId").empty().append('<option value="">-- Todos --</option>').prop('disabled', true);
             if (id) cargarParroquias(id, null);
         });
     });
 
-    // Función para pedir cantones al Servidor
     function cargarCantones(provId, valorSeleccionado) {
         $.getJSON('/Geografia/ObtenerCantones?provinciaId=' + provId, function (data) {
             var combo = $("#cantonId");
@@ -146,11 +175,10 @@
         });
     }
 
-    // Función para pedir parroquias al Servidor
     function cargarParroquias(cantId, valorSeleccionado) {
         $.getJSON('/Geografia/ObtenerParroquias?cantonId=' + cantId, function (data) {
             var combo = $("#parroquiaId");
-            combo.empty().append('<option value="">-- Todas --</option>');
+            combo.empty().append('<option value="">-- Todos --</option>');
             $.each(data, function (i, item) {
                 combo.append($('<option>').val(item.id).text(item.nombre));
             });
@@ -161,7 +189,13 @@
 
     function generarPDF() {
         var element = document.getElementById('area-impresion');
-        var opt = { margin: 0.5, filename: 'Resultados_Filtrados.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+        var opt = {
+            margin: 0.5,
+            filename: 'Reporte_Resultados.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
         html2pdf().set(opt).from(element).save();
     }
 </script>

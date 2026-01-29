@@ -16,5 +16,9 @@
         public int TotalVotos { get; set; }
         public string Estado { get; set; }
         public List<ResultadoVotacion> Resultados { get; set; } = new List<ResultadoVotacion>();
+
+        public int TotalEmpadronados { get; set; } // Padrón total (filtrado)
+        public int Ausentismo { get; set; }        // Cuántos faltaron
+        public double PorcentajeAusentismo { get; set; }
     }
 }

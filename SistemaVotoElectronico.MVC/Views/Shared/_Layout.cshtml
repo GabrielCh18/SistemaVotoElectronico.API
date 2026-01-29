@@ -53,9 +53,9 @@
                                 <a class="nav-link text-dark fw-bold" asp-area="" asp-controller="Home" asp-action="Index">🏠 Inicio</a>
                             </li>
 
-                            @if (ctrl != "Resultados")
+                            @if (ViewBag.MostrarResultados == true && ctrl != "Resultados")
                             {
-                                <li class="nav-item ms-2">
+                                <li class="nav-item ms-2 animate__animated animate__fadeIn">
                                     <a class="nav-link text-primary fw-bold border border-primary rounded px-3" asp-area="" asp-controller="Resultados" asp-action="Index">
                                         📊 Ver Resultados
                                     </a>

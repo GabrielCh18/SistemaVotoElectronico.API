@@ -1,5 +1,5 @@
 ﻿using System.Net.Http.Json;
-using SistemaVoto.Modelos; // <--- Asegúrate que coincida con tu namespace de modelos
+using SistemaVoto.Modelos;
 
 namespace SistemaVotoElectronico.ApiConsumer
 {
@@ -7,21 +7,21 @@ namespace SistemaVotoElectronico.ApiConsumer
     {
         private readonly HttpClient _httpClient;
 
-        // ⚠️ ¡CONFIRMA QUE ESTE SEA TU PUERTO CUANDO DAS PLAY A LA API! ⚠️
-        private readonly string _baseUrl = "https://localhost:7090/api/";
+        // ⚠️ CAMBIO CRUCIAL: Borramos la variable _baseUrl.
+        // Ahora confiamos ciegamente en la URL que configuramos en Program.cs (Render).
 
         public ApiService(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
 
-        // OPCIÓN A: TRAER UN SOLO OBJETO (Ej: El Resumen de Resultados)
+        // OPCIÓN A: TRAER UN SOLO OBJETO
         public async Task<ApiResult<T>> GetAsync<T>(string endpoint)
         {
             try
             {
-                // Tu API devuelve el objeto directo, así que lo leemos así:
-                var datos = await _httpClient.GetFromJsonAsync<T>($"{_baseUrl}{endpoint}");
+                // Usamos directamente "endpoint". El HttpClient ya sabe la base (Render).
+                var datos = await _httpClient.GetFromJsonAsync<T>(endpoint);
 
                 return new ApiResult<T>
                 {
@@ -35,12 +35,12 @@ namespace SistemaVotoElectronico.ApiConsumer
             }
         }
 
-        // OPCIÓN B: TRAER LISTAS (Ej: Lista de Candidatos)
+        // OPCIÓN B: TRAER LISTAS
         public async Task<ApiResult<List<T>>> GetListAsync<T>(string endpoint)
         {
             try
             {
-                var datos = await _httpClient.GetFromJsonAsync<List<T>>($"{_baseUrl}{endpoint}");
+                var datos = await _httpClient.GetFromJsonAsync<List<T>>(endpoint);
                 return new ApiResult<List<T>> { Success = true, Data = datos };
             }
             catch (Exception ex)
@@ -54,7 +54,7 @@ namespace SistemaVotoElectronico.ApiConsumer
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}{endpoint}", data);
+                var response = await _httpClient.PostAsJsonAsync(endpoint, data);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -71,18 +71,16 @@ namespace SistemaVotoElectronico.ApiConsumer
                 return new ApiResult<string> { Success = false, Message = ex.Message };
             }
         }
-        // ---------------------------------------------------------
+
         // METODO PARA BORRAR (DELETE)
-        // ---------------------------------------------------------
         public async Task<ApiResult<string>> DeleteAsync(string endpoint)
         {
             try
             {
-                var response = await _httpClient.DeleteAsync($"{_baseUrl}{endpoint}");
+                var response = await _httpClient.DeleteAsync(endpoint);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Si salió bien (200 OK), devolvemos éxito
                     return new ApiResult<string>
                     {
                         Success = true,
@@ -91,7 +89,6 @@ namespace SistemaVotoElectronico.ApiConsumer
                 }
                 else
                 {
-                    // Si falló, leemos qué pasó
                     var error = await response.Content.ReadAsStringAsync();
                     return new ApiResult<string>
                     {
@@ -109,16 +106,16 @@ namespace SistemaVotoElectronico.ApiConsumer
                 };
             }
         }
-        // MÉTODO NUEVO: Envía datos y ESPERA UNA RESPUESTA con datos (TResponse)
+
+        // MÉTODO POST CON RESPUESTA DE DATOS
         public async Task<ApiResult<TResponse>> PostWithResponseAsync<TRequest, TResponse>(string endpoint, TRequest data)
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}{endpoint}", data);
+                var response = await _httpClient.PostAsJsonAsync(endpoint, data);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Aquí SÍ leemos lo que devuelve la API (el JSON con código y nombre)
                     var resultado = await response.Content.ReadFromJsonAsync<TResponse>();
                     return new ApiResult<TResponse>
                     {

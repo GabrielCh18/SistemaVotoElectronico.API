@@ -1,8 +1,9 @@
 ﻿@model SistemaVoto.Modelos.Votante
+
 @{
     ViewData["Title"] = "Consulta tu Lugar de Votación";
 
-    // Leemos las variables del controlador con valores por defecto seguros
+    // Leemos las variables del controlador de forma segura
     bool mostrarBoton = ViewBag.MostrarResultados ?? false;
     string mensajeEstado = ViewBag.MensajeEstado as string;
 }
@@ -16,7 +17,7 @@
     <div class="mb-4">
         @if (mostrarBoton)
         {
-            <a asp-controller="Resultados" asp-action="Index" class="btn btn-outline-success fw-bold px-4 py-2 shadow-sm">
+            <a asp-controller="Resultados" asp-action="Index" class="btn btn-outline-success fw-bold px-4 py-2 shadow-sm animate__animated animate__fadeIn">
                 📊 VER RESULTADOS OFICIALES
             </a>
         }
@@ -52,7 +53,7 @@
 
                 @if (ViewBag.Error != null)
                 {
-                    <div class="alert alert-warning mt-3 mb-0 text-center">
+                    <div class="alert alert-warning mt-3 mb-0 text-center animate__animated animate__shakeX">
                         @ViewBag.Error
                     </div>
                 }
@@ -61,7 +62,7 @@
 
         @if (Model != null)
         {
-            <div class="card border-success shadow-lg">
+            <div class="card border-success shadow-lg animate__animated animate__fadeInUp">
                 <div class="card-header bg-success text-white text-center">
                     <h4 class="mb-0">✅ ¡Estás Empadronado!</h4>
                 </div>
@@ -107,19 +108,50 @@
 
                     @if (Model.YaVoto)
                     {
-                        <div class="alert alert-warning mt-4 shadow-sm border-warning">
-                            <div class="d-flex align-items-center justify-content-center">
-                                <span class="fs-2 me-3">⚠️</span>
-                                <div class="text-start">
-                                    <h5 class="alert-heading fw-bold mb-1">YA SUFRAGÓ</h5>
-                                    <p class="mb-0">Usted ya ha ejercido su derecho al voto en este proceso.</p>
+                        // Si ya votó, verificamos si ya descargó el certificado
+                        if (!Model.CertificadoDescargado)
+                        {
+                            // AUN NO DESCARGA -> MOSTRAR BOTÓN
+                            <div class="alert alert-success mt-4 shadow-sm border-success bg-light animate__animated animate__pulse">
+                                <div class="mb-3">
+                                    <h4 class="alert-heading fw-bold text-success">✅ ¡Sufragio Registrado!</h4>
+                                    <p class="mb-0">Gracias por cumplir con su deber cívico.</p>
+                                </div>
+                                <hr>
+
+                                <form asp-action="ObtenerCertificado" method="post" target="_blank">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <input type="hidden" name="nombre" value="@Model.Nombre @Model.Apellido" />
+                                    <input type="hidden" name="cedula" value="@Model.Cedula" />
+                                    <input type="hidden" name="proceso" value="@(Model.NombreProceso ?? "Elecciones 2026")" />
+
+                                    <button type="submit" class="btn btn-warning fw-bold text-dark w-100 py-2 shadow border border-warning">
+                                        📜 DESCARGAR CERTIFICADO DE VOTACIÓN
+                                    </button>
+                                    <div class="form-text text-danger fw-bold mt-2">
+                                        ⚠️ Importante: Solo se emite una vez. Guárdelo inmediatamente.
+                                    </div>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            // YA DESCARGÓ -> MENSAJE INFORMATIVO
+                            <div class="alert alert-secondary mt-4 shadow-sm">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <span class="fs-2 me-3">ℹ️</span>
+                                    <div class="text-start">
+                                        <h5 class="alert-heading fw-bold mb-1">Certificado Emitido</h5>
+                                        <p class="mb-0">El certificado de votación ya fue entregado previamente.</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        }
                     }
                     else
                     {
-                        <div class="alert alert-success mt-4 shadow-sm border-success">
+                        // NO HA VOTADO
+                        <div class="alert alert-primary mt-4 shadow-sm border-primary">
                             <div class="d-flex align-items-center justify-content-center">
                                 <span class="fs-2 me-3">🗳️</span>
                                 <div class="text-start">

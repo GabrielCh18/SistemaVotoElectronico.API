@@ -76,5 +76,20 @@ namespace SistemaVotoElectronico.MVC.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        [HttpPost] // Usamos POST para seguridad
+        public async Task<IActionResult> ObtenerCertificado(int id, string nombre, string cedula, string proceso)
+        {
+            // 1. Marcamos en la BD que ya se descargó
+            await _apiService.PostAsync<object>($"Votantes/marcar-certificado/{id}", null);
+
+            // 2. Pasamos los datos a la vista del diploma
+            ViewBag.NombreCompleto = nombre;
+            ViewBag.Cedula = cedula;
+            ViewBag.Proceso = proceso;
+            ViewBag.Fecha = DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy");
+
+            return View("Certificado");
+        }
     }
 }

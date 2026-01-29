@@ -1,0 +1,152 @@
+﻿@{
+    Layout = null; // Sin menú ni nada, solo el papel
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>Certificado de Votación</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            background-color: #f0f0f0;
+            font-family: 'Times New Roman', serif;
+        }
+
+        .certificado {
+            width: 800px;
+            height: 500px;
+            background: #fff url('https://www.toptal.com/designers/subtlepatterns/uploads/fancy_deboss.png');
+            margin: 50px auto;
+            padding: 40px;
+            border: 10px solid #2c3e50;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        .marco-interno {
+            border: 2px solid #daa520; /* Dorado */
+            height: 100%;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            color: #000;
+            margin: 20px 0;
+            border-bottom: 1px solid #ccc;
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+
+        .sello {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid #daa520;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #daa520;
+            font-weight: bold;
+            font-size: 14px;
+            transform: rotate(-15deg);
+            position: absolute;
+            bottom: 60px;
+            left: 60px;
+            opacity: 0.8;
+        }
+        @@media print {
+            body {
+                background: none;
+                margin: 0;
+            }
+
+            .certificado {
+                margin: 0;
+                border: 5px solid #2c3e50;
+                box-shadow: none;
+                width: 100%;
+                height: 100vh;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="text-center mt-3 no-print">
+        <button onclick="window.print()" class="btn btn-primary btn-lg">🖨️ Imprimir / Guardar PDF</button>
+        <button onclick="window.close()" class="btn btn-secondary btn-lg ms-2">Cerrar</button>
+        <div class="alert alert-warning mt-2 d-inline-block">
+            ⚠️ Guárdelo ahora. No podrá generarlo nuevamente.
+        </div>
+    </div>
+
+    <div class="certificado">
+        <div class="marco-interno">
+
+            <div class="header">
+                <h4 class="text-uppercase text-muted mb-0">República del Ecuador</h4>
+                <h5 class="text-muted">Consejo Nacional Electoral</h5>
+                <hr class="w-25 mx-auto border-secondary">
+                <h1>Certificado de Votación</h1>
+            </div>
+
+            <div class="cuerpo">
+                <p class="fs-5">Certifica que el ciudadano(a):</p>
+
+                <h2>@ViewBag.NombreCompleto</h2>
+
+                <p class="fs-5">Con Cédula de Identidad N° <strong>@ViewBag.Cedula</strong></p>
+                <p>Ha cumplido con su deber cívico en el proceso:</p>
+                <h4 class="text-primary">"@ViewBag.Proceso"</h4>
+            </div>
+
+            <div class="footer d-flex justify-content-between align-items-end mt-4">
+                <div class="text-center">
+                    <p class="mb-0">__________________________</p>
+                    <small>Presidente de Junta</small>
+                </div>
+
+                <div class="text-center">
+                    <p class="mb-0">Fecha de Emisión</p>
+                    <strong>@ViewBag.Fecha</strong>
+                </div>
+
+                <div class="text-center">
+                    <p class="mb-0">__________________________</p>
+                    <small>Secretario</small>
+                </div>
+            </div>
+
+            <div class="sello">
+                <div class="text-center">
+                    CNE<br>OFICIAL<br>2026
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Opcional: Imprimir automáticamente al abrir
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

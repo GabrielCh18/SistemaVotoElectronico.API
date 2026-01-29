@@ -162,5 +162,19 @@ namespace SistemaVotoElectronico.API.Controllers
                                 .ThenInclude(c => c.Provincia)
                 .ToListAsync();
         }
+
+        [HttpPost("marcar-certificado/{id}")]
+        public async Task<IActionResult> MarcarCertificado(int id)
+        {
+            var votante = await _context.Votantes.FindAsync(id);
+            if (votante == null) return NotFound();
+
+            votante.CertificadoDescargado = true;
+
+            _context.Entry(votante).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
     }
 }

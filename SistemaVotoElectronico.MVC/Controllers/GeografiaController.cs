@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SistemaVoto.Modelos;
 using SistemaVotoElectronico.ApiConsumer;
 
 namespace SistemaVotoElectronico.MVC.Controllers
 {
+    // 🔒 NUEVO CANDADO DE SEGURIDAD
+    [Authorize(Roles = "Admin")]
     public class GeografiaController : Controller
     {
         private readonly ApiService _apiService;
@@ -17,9 +20,6 @@ namespace SistemaVotoElectronico.MVC.Controllers
         // VISTA PRINCIPAL (MENU)
         public async Task<IActionResult> Index()
         {
-            if (HttpContext.Session.GetString("UsuarioAdmin") == null)
-                return RedirectToAction("Login", "Account");
-
             // Pedimos las provincias a la API para mostrarlas en la tabla
             var respuesta = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
 
@@ -93,13 +93,12 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             return View();
         }
+
         [HttpGet]
         public async Task<JsonResult> ObtenerCantones(int provinciaId)
         {
-            // Llamamos a la API que ya creamos antes: "api/Geografia/cantones/por-provincia/{id}"
+            // Llamamos a la API que ya creamos antes
             var respuesta = await _apiService.GetListAsync<Canton>($"Geografia/cantones/por-provincia/{provinciaId}");
-
-            // Devolvemos los datos en formato JSON para que JavaScript los entienda
             return Json(respuesta.Data);
         }
 
@@ -111,7 +110,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             if (!ModelState.IsValid)
             {
-                // Si falla, recargamos las PROVINCIAS (para que no se rompa la vista)
+                // Si falla, recargamos las PROVINCIAS
                 var provincias = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
                 ViewBag.Provincias = new SelectList(provincias.Data, "Id", "Nombre");
                 return View(parroquia);
@@ -155,7 +154,6 @@ namespace SistemaVotoElectronico.MVC.Controllers
             if (!ModelState.IsValid)
             {
                 // Si falla, recargamos solo el nivel 1 (Provincias)
-                // El usuario tendrá que seleccionar de nuevo (es difícil mantener el estado de los 3 niveles tras un error)
                 var provincias = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
                 ViewBag.Provincias = new SelectList(provincias.Data, "Id", "Nombre");
                 return View(zona);
@@ -213,6 +211,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
             ViewBag.Provincias = new SelectList(provs.Data, "Id", "Nombre");
             return View(junta);
         }
+
         [HttpGet]
         public async Task<JsonResult> ObtenerJuntas(int zonaId)
         {

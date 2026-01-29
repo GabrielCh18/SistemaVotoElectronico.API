@@ -1,6 +1,10 @@
 ﻿@model SistemaVoto.Modelos.Votante
 @{
     ViewData["Title"] = "Consulta tu Lugar de Votación";
+
+    // Leemos las variables del controlador con valores por defecto seguros
+    bool mostrarBoton = ViewBag.MostrarResultados ?? false;
+    string mensajeEstado = ViewBag.MensajeEstado as string;
 }
 
 <div class="text-center mt-4">
@@ -8,6 +12,22 @@
     <p class="lead text-muted">
         Ingresa tu número de cédula para conocer tu recinto y mesa electoral.
     </p>
+
+    <div class="mb-4">
+        @if (mostrarBoton)
+        {
+            <a asp-controller="Resultados" asp-action="Index" class="btn btn-outline-success fw-bold px-4 py-2 shadow-sm">
+                📊 VER RESULTADOS OFICIALES
+            </a>
+        }
+        else if (!string.IsNullOrEmpty(mensajeEstado))
+        {
+            <span class="badge bg-info text-dark p-2 fs-6 shadow-sm">
+                <span class="spinner-grow spinner-grow-sm me-1" role="status" aria-hidden="true"></span>
+                @mensajeEstado
+            </span>
+        }
+    </div>
 </div>
 
 <div class="row justify-content-center mt-4">

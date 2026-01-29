@@ -24,12 +24,16 @@ namespace SistemaVotoElectronico.MVC.Controllers
             // PARTE 1: VERIFICAR ESTADO DE ELECCIÓN (Para el botón)
             // ---------------------------------------------------------
             var procesoActivo = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
+
+            // Si hay un proceso activo (datos existen y no es nulo), estamos votando
             bool hayEleccionEnCurso = (procesoActivo.Success && procesoActivo.Data != null);
 
+            // LOGICA CORREGIDA DEL BOTÓN:
+            // Solo mostramos resultados si NO hay elección en curso Y hay historial previo
             if (hayEleccionEnCurso)
             {
-                ViewBag.MostrarResultados = false;
-                ViewBag.Mensaje = "Las urnas están abiertas. ¡Acércate a votar!";
+                ViewBag.MostrarResultados = false; // Ocultar botón
+                ViewBag.MensajeEstado = "🗳️ Elecciones en Curso"; // Mensaje informativo
             }
             else
             {
@@ -37,8 +41,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
                 var historial = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
                 bool hayHistorial = historial.Success && historial.Data != null && historial.Data.Any();
 
-                ViewBag.MostrarResultados = hayHistorial;
-                ViewBag.Mensaje = "Proceso electoral finalizado.";
+                ViewBag.MostrarResultados = hayHistorial; // Mostrar botón si hay algo que mostrar
             }
 
             // ---------------------------------------------------------

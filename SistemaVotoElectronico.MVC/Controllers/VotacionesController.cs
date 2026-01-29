@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SistemaVotoElectronico.ApiConsumer;
 using SistemaVoto.Modelos;
 
 namespace SistemaVotoElectronico.MVC.Controllers
 {
+    // 🔒 NUEVO CANDADO DE SEGURIDAD
+    [Authorize(Roles = "Admin")]
     public class VotacionesController : Controller
     {
         private readonly ApiService _apiService;
@@ -16,9 +19,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
         // 1. LISTAR ELECCIONES
         public async Task<IActionResult> Index()
         {
-            // Verificamos si es Admin (Seguridad)
-            if (HttpContext.Session.GetString("UsuarioAdmin") == null)
-                return RedirectToAction("Login", "Account");
+            // (Ya no necesitamos verificar sesión aquí)
 
             // Llamamos a la API usando el nombre que puso tu compañero: "ProcesosElectorales"
             var response = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
@@ -42,8 +43,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
         [HttpPost]
         public async Task<IActionResult> CambiarEstado(int id, string accion)
         {
-            if (HttpContext.Session.GetString("UsuarioAdmin") == null)
-                return RedirectToAction("Login", "Account");
+            // (Ya no necesitamos verificar sesión aquí)
 
             string endpoint = "";
 
@@ -54,13 +54,10 @@ namespace SistemaVotoElectronico.MVC.Controllers
             }
             else if (accion == "activar")
             {
-                // NOTA: Si tu API no tiene endpoint "activar", tendríamos que crear uno nuevo
-                // o editar el objeto. Asumiré por ahora que tu compañero creó lógica para "activar".
-                // Si no, avísame y lo ajustamos.
                 endpoint = $"ProcesosElectorales/activar/{id}";
             }
 
-            // Enviamos la petición (PostAsync requiere un cuerpo, mandamos null porque es solo comando)
+            // Enviamos la petición
             var response = await _apiService.PostAsync<object>(endpoint, null);
 
             if (!response.Success)
@@ -73,6 +70,28 @@ namespace SistemaVotoElectronico.MVC.Controllers
             }
 
             return RedirectToAction("Index");
+        }
+
+        // METODOS CREATE (AGREGADOS PARA COMPLETAR)
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(ProcesoElectoral proceso)
+        {
+            if (ModelState.IsValid)
+            {
+                var response = await _apiService.PostAsync("ProcesosElectorales", proceso);
+                if (response.Success)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                ModelState.AddModelError("", response.Message);
+            }
+            return View(proceso);
         }
     }
 }

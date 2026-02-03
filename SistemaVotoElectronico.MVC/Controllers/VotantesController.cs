@@ -6,7 +6,7 @@ using SistemaVotoElectronico.ApiConsumer;
 
 namespace SistemaVotoElectronico.MVC.Controllers
 {
-    // 🔒 NUEVO CANDADO DE SEGURIDAD
+    //CANDADO DE SEGURIDAD
     [Authorize(Roles = "Admin")]
     public class VotantesController : Controller
     {
@@ -17,7 +17,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
-        // 1. CREAR VOTANTE
+        // CREAR VOTANTE
         public async Task<IActionResult> Crear()
         {
             // Cargamos el nivel 1 (Provincias)
@@ -54,9 +54,8 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(votante);
         }
 
-        // --------------------------------------------------
         // 2. LISTADO GENERAL (PADRÓN)
-        // --------------------------------------------------
+       
         public async Task<IActionResult> Index()
         {
             // Pedimos la lista completa al API

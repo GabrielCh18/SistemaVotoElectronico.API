@@ -7,7 +7,7 @@ namespace SistemaVotoElectronico.ApiConsumer
     {
         private readonly HttpClient _httpClient;
 
-        // ⚠️ CAMBIO CRUCIAL: Borramos la variable _baseUrl.
+        // CAMBIO CRUCIAL: Borramos la variable _baseUrl.
         // Ahora confiamos ciegamente en la URL que configuramos en Program.cs (Render).
 
         public ApiService(HttpClient httpClient)

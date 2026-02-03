@@ -13,9 +13,8 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
-        // ==========================================
-        // LOGIN (Igual que antes)
-        // ==========================================
+        // LOGIN
+      
         public IActionResult Login()
         {
             if (HttpContext.Session.GetString("JefeLogueado") != null) return RedirectToAction("Index");
@@ -45,9 +44,9 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return RedirectToAction("Login");
         }
 
-        // ==========================================
+       
         // 2. PANEL DE CONTROL (AHORA CON BÚSQUEDA)
-        // ==========================================
+      
         [HttpGet]
         public async Task<IActionResult> Index(string? cedulaBusqueda)
         {
@@ -80,15 +79,14 @@ namespace SistemaVotoElectronico.MVC.Controllers
             }
         }
 
-        // ==========================================
         // 3. GENERAR CÓDIGO (SOLO SI EL JEFE CONFIRMA)
-        // ==========================================
+       
         [HttpPost]
         public async Task<IActionResult> Generar(string cedulaVotante)
         {
             if (HttpContext.Session.GetString("JefeLogueado") == null) return RedirectToAction("Login");
 
-            // Llamamos a la API para generar (Tu API ya valida si ya votó, etc.)
+            // Llamamos a la API para generar 
             var response = await _apiService.PostWithResponseAsync<RespuestaCodigo, RespuestaCodigo>(
                 $"Votantes/generar-codigo/{cedulaVotante}",
                 new RespuestaCodigo()
@@ -111,7 +109,6 @@ namespace SistemaVotoElectronico.MVC.Controllers
         }
     }
 
-    // Tu clase auxiliar
     public class RespuestaCodigo
     {
         public string Codigo { get; set; } = string.Empty;

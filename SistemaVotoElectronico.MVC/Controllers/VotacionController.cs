@@ -13,7 +13,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
-        // 1️⃣ PANTALLA DE INGRESO
+        //PANTALLA DE INGRESO
         public IActionResult Index()
         {
             // Limpieza selectiva para no sacar al Jefe
@@ -23,7 +23,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View();
         }
 
-        // 2️⃣ VALIDAR CÉDULA Y CÓDIGO
+        //VALIDAR CÉDULA Y CÓDIGO
         [HttpPost]
         public async Task<IActionResult> Ingresar(string cedula, string codigo)
         {
@@ -72,18 +72,16 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return RedirectToAction("Papeleta");
         }
 
-        // 3️⃣ MOSTRAR PAPELETA
+        // MOSTRAR PAPELETA
         public async Task<IActionResult> Papeleta()
         {
             var cedula = HttpContext.Session.GetString("Cedula");
             var pid = HttpContext.Session.GetInt32("ProcesoId");
 
-            // 🛡️ FIX 1: Validar también que pid no sea nulo
             if (cedula == null || pid == null) return RedirectToAction("Index");
 
             var candidatos = await _apiService.GetListAsync<Candidato>($"Candidatos/por-proceso/{pid}");
 
-            // 🛡️ FIX 2: EL PARACAÍDAS ANTI-CRASH
             // Si la API falla y devuelve null, no dejamos que la vista explote.
             if (!candidatos.Success || candidatos.Data == null)
             {
@@ -94,7 +92,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(candidatos.Data);
         }
 
-        // 4️⃣ REGISTRAR EL VOTO
+        // REGISTRAR EL VOTO
         [HttpPost]
         public async Task<IActionResult> Votar(int candidatoId)
         {
@@ -102,7 +100,6 @@ namespace SistemaVotoElectronico.MVC.Controllers
             var codigo = HttpContext.Session.GetString("Codigo");
             var pid = HttpContext.Session.GetInt32("ProcesoId");
 
-            // 🛡️ FIX 3: Validar pid aquí también
             if (cedula == null || codigo == null || pid == null) return RedirectToAction("Index");
 
             string url = $"Votos/registrar-voto?cedula={cedula}&codigo={codigo}&candidatoId={candidatoId}&procesoElectoralId={pid}";
@@ -120,17 +117,14 @@ namespace SistemaVotoElectronico.MVC.Controllers
             }
             else
             {
-                // Hubo error al votar (ej. ya votó), intentamos recargar la papeleta
                 ViewBag.Error = resultado.Message;
 
                 var cand = await _apiService.GetListAsync<Candidato>($"Candidatos/por-proceso/{pid}");
 
-                // 🛡️ FIX 4: PROTECCIÓN DOBLE
-                // Si al intentar mostrar el error, TAMBIÉN falla la carga de candidatos...
                 if (!cand.Success || cand.Data == null)
                 {
                     ViewBag.Error = "❌ Error crítico: " + resultado.Message;
-                    return View("Index"); // Sacamos al usuario por seguridad
+                    return View("Index"); 
                 }
 
                 return View("Papeleta", cand.Data);

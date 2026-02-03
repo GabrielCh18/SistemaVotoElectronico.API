@@ -15,12 +15,12 @@ namespace SistemaVoto.Modelos
         public bool CertificadoDescargado { get; set; } = false;
         public ICollection<Voto>? Votos { get; set; }
 
-        // 👇 PROPIEDADES TEMPORALES (No van a la base de datos)
+        // PROPIEDADES TEMPORALES (No van a la base de datos)
         [NotMapped]
         public bool YaVoto { get; set; }
 
         [NotMapped]
-        public string? NombreProceso { get; set; } // 👈 AGREGAR ESTA
+        public string? NombreProceso { get; set; }
 
         [NotMapped]
         public string? Token { get; set; }

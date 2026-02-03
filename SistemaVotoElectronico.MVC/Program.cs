@@ -5,14 +5,14 @@ using SistemaVotoElectronico.MVC.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. CONFIGURACIÓN DE BASE DE DATOS (POSTGRESQL)
+//CONFIGURACIÓN DE BASE DE DATOS (POSTGRESQL)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<SistemaVotoElectronicoMVCContext>(options =>
     options.UseNpgsql(connectionString));
 
-// 2. CONFIGURACIÓN DE IDENTITY (SEGURIDAD)
+// CONFIGURACIÓN DE IDENTITY (SEGURIDAD)
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -22,7 +22,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<SistemaVotoElectronicoMVCContext>();
 
-// 3. MVC y SESIÓN
+// MVC y SESIÓN
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddSession(options =>
@@ -32,11 +32,9 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// 4. CLIENTE API (Modo Fuerza Bruta: Solo Render)
+// CLIENTE API (Modo Fuerza Bruta: Solo Render)
 builder.Services.AddHttpClient<ApiService>(client =>
 {
-    // OJO: Aquí estoy escribiendo la URL directamente para que no haya dudas.
-    // Si esto funciona, es que tus archivos appsettings.json te están mintiendo.
     string urlFija = "https://sistemavotoelectronico-api-s0li.onrender.com/api/";
 
     Console.WriteLine($"==================================================");
@@ -52,7 +50,7 @@ builder.Services.AddHttpClient<ApiService>(client =>
 
 var app = builder.Build();
 
-// 5. PIPELINE HTTP
+// PIPELINE HTTP
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -64,19 +62,19 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// 6. SEGURIDAD
+// SEGURIDAD
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
 
-// 7. RUTAS
+// RUTAS
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages();
 
-// 🔥 INICIO DEL BLOQUE MÁGICO: Crear Admin Automáticamente 🔥
+// INICIO DEL BLOQUE MÁGICO: Crear Admin Automáticamente 🔥
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -85,14 +83,14 @@ using (var scope = app.Services.CreateScope())
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
 
-        // 1. Crear el Rol "Admin" si no existe
+        // Crear el Rol "Admin" si no existe
         if (!await roleManager.RoleExistsAsync("Admin"))
         {
             await roleManager.CreateAsync(new IdentityRole("Admin"));
         }
 
-        // 2. Buscar tu usuario y darle el poder
-        // ⚠️ Correo configurado:
+        // Buscar tu usuario y darle el poder
+        // Correo configurado:
         string emailAdmin = "arevalodany16@gmail.com";
 
         var usuario = await userManager.FindByEmailAsync(emailAdmin);
@@ -112,6 +110,5 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Ocurrió un error creando los roles automáticamente.");
     }
 }
-// 🔥 FIN DEL BLOQUE MÁGICO 🔥
 
 app.Run();

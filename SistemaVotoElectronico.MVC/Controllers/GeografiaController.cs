@@ -6,7 +6,7 @@ using SistemaVotoElectronico.ApiConsumer;
 
 namespace SistemaVotoElectronico.MVC.Controllers
 {
-    // 🔒 NUEVO CANDADO DE SEGURIDAD
+    //NUEVO CANDADO DE SEGURIDAD
     [Authorize(Roles = "Admin")]
     public class GeografiaController : Controller
     {
@@ -27,7 +27,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(respuesta.Success ? respuesta.Data : new List<Provincia>());
         }
 
-        // 2. AGREGAMOS LA ACCIÓN DE ELIMINAR
+        // AGREGAMOS LA ACCIÓN DE ELIMINAR
         public async Task<IActionResult> EliminarProvincia(int id)
         {
             var respuesta = await _apiService.DeleteAsync($"Geografia/provincias/{id}");
@@ -40,9 +40,8 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return RedirectToAction("Index");
         }
 
-        // ------------------------------------------------
-        // 1. CREAR PROVINCIA
-        // ------------------------------------------------
+        // CREAR PROVINCIA
+       
         public IActionResult CrearProvincia() => View();
 
         [HttpPost]
@@ -59,9 +58,8 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(provincia);
         }
 
-        // ------------------------------------------------
-        // 2. CREAR CANTON (Necesita cargar Provincias)
-        // ------------------------------------------------
+        // CREAR CANTON (Necesita cargar Provincias)
+       
         public async Task<IActionResult> CrearCanton()
         {
             var provincias = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
@@ -87,7 +85,6 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
         public async Task<IActionResult> CrearParroquia()
         {
-            // CAMBIO: Ahora cargamos PROVINCIAS, no Cantones directamente
             var provincias = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
             ViewBag.Provincias = new SelectList(provincias.Data, "Id", "Nombre");
 
@@ -134,10 +131,10 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return Json(respuesta.Data);
         }
 
-        // B. La Vista de Crear Zona
+        //La Vista de Crear Zona
         public async Task<IActionResult> CrearZona()
         {
-            // Carga inicial: Solo las Provincias (Nivel 1)
+            // Carga inicial: Solo las Provincias 
             var provincias = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
             ViewBag.Provincias = new SelectList(provincias.Data, "Id", "Nombre");
 
@@ -153,7 +150,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             if (!ModelState.IsValid)
             {
-                // Si falla, recargamos solo el nivel 1 (Provincias)
+                // Si falla, recargamos solo el nivel 1 
                 var provincias = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
                 ViewBag.Provincias = new SelectList(provincias.Data, "Id", "Nombre");
                 return View(zona);
@@ -178,7 +175,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return Json(respuesta.Data);
         }
 
-        // B. Pantalla Crear Junta
+        // Pantalla Crear Junta
         public async Task<IActionResult> CrearJunta()
         {
             // Carga inicial: Solo nivel 1 (Provincias)

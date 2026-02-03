@@ -30,7 +30,7 @@ namespace SistemaVotoElectronico.API.Controllers
         [HttpPost]
         public async Task<ActionResult<Candidato>> PostCandidato(Candidato candidato)
         {
-            // 🔥 Buscar el proceso activo automáticamente
+            // Buscar el proceso activo automáticamente
             var procesoActivo = await _context.ProcesoElectorales
                 .Where(p => p.Activo)
                 .OrderByDescending(p => p.Id)
@@ -39,7 +39,7 @@ namespace SistemaVotoElectronico.API.Controllers
             if (procesoActivo == null)
                 return BadRequest("No hay un proceso electoral activo.");
 
-            // 💥 FORZAMOS el proceso correcto
+            // FORZAMOS el proceso correcto
             candidato.ProcesoElectoralId = procesoActivo.Id;
 
             _context.Candidatos.Add(candidato);
@@ -58,16 +58,14 @@ namespace SistemaVotoElectronico.API.Controllers
                 return NotFound("El candidato no existe.");
             }
 
-            // 1. BUSCAMOS LOS VOTOS DE ESTE CANDIDATO
+            //  BUSCAMOS LOS VOTOS DE ESTE CANDIDATO
             var votos = _context.Votos.Where(v => v.CandidatoId == id).ToList();
 
-            // 2. LOS BORRAMOS PRIMERO (Limpieza)
+            //  LOS BORRAMOS PRIMERO (Limpieza)
             if (votos.Any())
             {
                 _context.Votos.RemoveRange(votos);
             }
-
-            // 3. AHORA SÍ, BORRAMOS AL CANDIDATO
             _context.Candidatos.Remove(candidato);
 
             try

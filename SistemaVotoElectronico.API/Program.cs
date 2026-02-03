@@ -12,14 +12,14 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- CONFIGURACIÓN DE BASE DE DATOS (MODO "NUCLEAR") ---
+//  CONFIGURACIÓN DE BASE DE DATOS (MODO "NUCLEAR")
 // Aquí ponemos la conexión directa para obligar a que funcione
 var connectionString = "Host=dpg-d5nc34mmcj7s73cjiap0-a.oregon-postgres.render.com;Database=sistemavoto_db;Username=sistemavoto_db_user;Password=GxYUpmlLIz58crgtri1ZFVonWuurINFt;SSL Mode=Require;Trust Server Certificate=true";
 
 builder.Services.AddDbContext<VotoContext>(options =>
     options.UseNpgsql(connectionString));
 
-// --- CONFIGURACIÓN JWT ---
+//  CONFIGURACIÓN JWT 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
@@ -36,7 +36,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 builder.Services.AddEndpointsApiExplorer();
 
-// --- CONFIGURACIÓN SWAGGER ---
+//  CONFIGURACIÓN SWAGGER 
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Sistema Voto Electrónico API", Version = "v1" });
@@ -75,8 +75,6 @@ builder.Services.AddCors(options => {
 
 var app = builder.Build();
 
-// --- PIPELINE DE LA APLICACIÓN ---
-
 app.UseCors();
 
 // Habilitar Swagger siempre
@@ -99,7 +97,6 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<VotoContext>();
 
-        // --- LLAMADA AL INICIALIZADOR ---
         // Esto creará datos de prueba si la base está vacía
         DbInitializer.Initialize(context);
 

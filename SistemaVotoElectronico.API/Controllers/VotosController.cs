@@ -25,7 +25,7 @@ namespace SistemaVotoElectronico.API.Controllers
         {
             var ahora = DateTime.UtcNow;
 
-            // 1️⃣ Validar proceso electoral activo y dentro del horario
+            // Validar proceso electoral activo y dentro del horario
             var proceso = await _context.ProcesoElectorales
                 .Include(p => p.Candidatos)
                 .FirstOrDefaultAsync(p =>
@@ -38,14 +38,14 @@ namespace SistemaVotoElectronico.API.Controllers
             if (proceso == null)
                 return BadRequest("No existe un proceso electoral activo o está fuera del horario permitido.");
 
-            // 2️⃣ Validar que el candidato pertenezca al proceso
+            // Validar que el candidato pertenezca al proceso
             bool candidatoValido = proceso.Candidatos
                 .Any(c => c.Id == candidatoId);
 
             if (!candidatoValido)
                 return BadRequest("El candidato no pertenece a este proceso electoral.");
 
-            // 3️⃣ Validar token
+            // Validar token
             var token = await _context.Tokens
                 .FirstOrDefaultAsync(t =>
                     t.CodigoUnico == codigo &&
@@ -56,7 +56,7 @@ namespace SistemaVotoElectronico.API.Controllers
             if (token == null)
                 return BadRequest("Código inválido, usado o expirado.");
 
-            // 4️⃣ Validar votante
+            // Validar votante
             var votante = await _context.Votantes
                 .FirstOrDefaultAsync(v => v.Cedula == cedula);
 
@@ -66,7 +66,7 @@ namespace SistemaVotoElectronico.API.Controllers
             if (token.VotanteId != votante.Id)
                 return BadRequest("Este código no pertenece a esta cédula.");
 
-            // 5️⃣ Verificar si ya votó en ESTE proceso electoral
+            // Verificar si ya votó en ESTE proceso electoral
             bool yaVotoEnProceso = await _context.Votos.AnyAsync(v =>
                 v.IdVotante == votante.Id &&
                 v.ProcesoElectoralId == procesoElectoralId
@@ -75,7 +75,7 @@ namespace SistemaVotoElectronico.API.Controllers
             if (yaVotoEnProceso)
                 return BadRequest("El ciudadano ya votó en este proceso electoral.");
 
-            // 6️⃣ Registrar el voto
+            // Registrar el voto
             var nuevoVoto = new Voto
             {
                 IdVotante = votante.Id,

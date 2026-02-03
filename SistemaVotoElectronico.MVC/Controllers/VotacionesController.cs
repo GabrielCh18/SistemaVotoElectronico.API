@@ -5,7 +5,7 @@ using SistemaVoto.Modelos;
 
 namespace SistemaVotoElectronico.MVC.Controllers
 {
-    // 🔒 NUEVO CANDADO DE SEGURIDAD
+    // CANDADO DE SEGURIDAD
     [Authorize(Roles = "Admin")]
     public class VotacionesController : Controller
     {
@@ -16,12 +16,10 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
-        // 1. LISTAR ELECCIONES
+        // LISTAR ELECCIONES
         public async Task<IActionResult> Index()
         {
-            // (Ya no necesitamos verificar sesión aquí)
 
-            // Llamamos a la API usando el nombre que puso tu compañero: "ProcesosElectorales"
             var response = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
 
             if (!response.Success)
@@ -43,11 +41,9 @@ namespace SistemaVotoElectronico.MVC.Controllers
         [HttpPost]
         public async Task<IActionResult> CambiarEstado(int id, string accion)
         {
-            // (Ya no necesitamos verificar sesión aquí)
 
             string endpoint = "";
 
-            // Tu API tiene endpoints específicos para esto
             if (accion == "cerrar")
             {
                 endpoint = $"ProcesosElectorales/cerrar/{id}";
@@ -57,7 +53,6 @@ namespace SistemaVotoElectronico.MVC.Controllers
                 endpoint = $"ProcesosElectorales/activar/{id}";
             }
 
-            // Enviamos la petición
             var response = await _apiService.PostAsync<object>(endpoint, null);
 
             if (!response.Success)

@@ -10,17 +10,17 @@ namespace SistemaVoto.Modelos
 
         public DateTime FechaVoto { get; set; } = DateTime.Now;
 
-        // 🔹 Votante
+        // Votante
         public int IdVotante { get; set; }
         [ForeignKey(nameof(IdVotante))]
         public Votante? Votante { get; set; }
 
-        // 🔹 Candidato
+        // Candidato
         public int CandidatoId { get; set; }
         [ForeignKey(nameof(CandidatoId))]
         public Candidato? Candidato { get; set; }
 
-        // 🔹 Proceso Electoral
+        // Proceso Electoral
         public int ProcesoElectoralId { get; set; }
         [ForeignKey(nameof(ProcesoElectoralId))]
         public ProcesoElectoral? ProcesoElectoral { get; set; }

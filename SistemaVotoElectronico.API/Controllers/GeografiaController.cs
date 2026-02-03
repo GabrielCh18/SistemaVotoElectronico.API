@@ -16,7 +16,7 @@ namespace SistemaVotoElectronico.API.Controllers
             _context = context;
         }
 
-        // --- 1. PROVINCIAS ---
+        // PROVINCIAS 
         [HttpGet("provincias")]
         public async Task<ActionResult<List<Provincia>>> GetProvincias()
         {
@@ -31,7 +31,7 @@ namespace SistemaVotoElectronico.API.Controllers
             return Ok(provincia);
         }
 
-        // --- 2. CANTONES ---
+        // CANTONES 
         [HttpGet("cantones")]
         public async Task<ActionResult<List<Canton>>> GetCantones()
         {
@@ -56,7 +56,7 @@ namespace SistemaVotoElectronico.API.Controllers
             return Ok(canton);
         }
 
-        // --- 3. PARROQUIAS ---
+        // PARROQUIAS
         [HttpGet("parroquias/por-canton/{cantonId}")]
         public async Task<ActionResult<List<Parroquia>>> GetParroquiasPorCanton(int cantonId)
         {
@@ -71,7 +71,7 @@ namespace SistemaVotoElectronico.API.Controllers
             return Ok(parroquia);
         }
 
-        // --- 4. ZONAS ---
+        // ZONAS 
         [HttpGet("zonas/por-parroquia/{parroquiaId}")]
         public async Task<ActionResult<List<Zona>>> GetZonasPorParroquia(int parroquiaId)
         {
@@ -86,7 +86,7 @@ namespace SistemaVotoElectronico.API.Controllers
             return Ok(zona);
         }
 
-        // --- 5. JUNTAS (MESAS) ---
+        // JUNTAS (MESAS) 
         [HttpGet("juntas/por-zona/{zonaId}")]
         public async Task<ActionResult<List<Junta>>> GetJuntasPorZona(int zonaId)
         {
@@ -106,9 +106,6 @@ namespace SistemaVotoElectronico.API.Controllers
         {
             var provincia = await _context.Provincias.FindAsync(id);
             if (provincia == null) return NotFound("Provincia no encontrada");
-
-            // Opcional: Validar si tiene cantones hijos antes de borrar
-            // pero para limpiar rápido, lo haremos directo:
             _context.Provincias.Remove(provincia);
             await _context.SaveChangesAsync();
             return Ok("Eliminado");

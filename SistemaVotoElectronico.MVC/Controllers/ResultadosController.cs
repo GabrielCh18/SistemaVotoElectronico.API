@@ -18,7 +18,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
         {
             ProcesoElectoral proceso = null;
 
-            // --- LÓGICA PARA ELEGIR EL PROCESO ---
+            //  LÓGICA PARA ELEGIR EL PROCESO 
             if (procesoId.HasValue)
             {
                 // Si vienes del Historial
@@ -43,7 +43,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
                 }
             }
 
-            // --- CARGAMOS LAS PROVINCIAS PARA EL FILTRO ---
+            //  CARGAMOS LAS PROVINCIAS PARA EL FILTRO 
             var provsResp = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
             ViewBag.Provincias = new SelectList(provsResp.Data ?? new List<Provincia>(), "Id", "Nombre", provinciaId);
 
@@ -61,8 +61,8 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             ViewBag.NombreProceso = $"Elecciones del {proceso.FechaInicio:dd/MM/yyyy}";
 
-            // --- LLAMADA AL API CON FILTROS ---
-            string url = $"Resultados/{proceso.Id}?dummy=1"; // Truco para concatenar fácil
+            //  LLAMADA AL API CON FILTROS 
+            string url = $"Resultados/{proceso.Id}?dummy=1"; 
             if (provinciaId.HasValue) url += $"&provinciaId={provinciaId}";
             if (cantonId.HasValue) url += $"&cantonId={cantonId}";
             if (parroquiaId.HasValue) url += $"&parroquiaId={parroquiaId}";

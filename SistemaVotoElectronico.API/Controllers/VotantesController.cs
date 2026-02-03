@@ -16,9 +16,7 @@ namespace SistemaVotoElectronico.API.Controllers
             _context = context;
         }
 
-        // --------------------------------------------------
         // REGISTRAR VOTANTE
-        // --------------------------------------------------
         [HttpPost("registrar")]
         public async Task<ActionResult<Votante>> RegistrarVotante(Votante votante)
         {
@@ -38,9 +36,7 @@ namespace SistemaVotoElectronico.API.Controllers
             return CreatedAtAction(nameof(GetVotante), new { cedula = votante.Cedula }, votante);
         }
 
-        // --------------------------------------------------
         // BUSCAR VOTANTE POR CÉDULA
-        // --------------------------------------------------
         [HttpGet("buscar/{cedula}")]
         public async Task<ActionResult<Votante>> GetVotante(string cedula)
         {
@@ -68,7 +64,7 @@ namespace SistemaVotoElectronico.API.Controllers
                 );
             }
 
-            // 3. 🔥 RECUPERAMOS EL TOKEN ACTIVO 🔥
+            // RECUPERAMOS EL TOKEN ACTIVO 
             // Buscamos el código que no ha expirado y no se ha usado
             var tokenActivo = await _context.Tokens
                 .Where(t => t.VotanteId == votante.Id &&
@@ -85,9 +81,8 @@ namespace SistemaVotoElectronico.API.Controllers
             return Ok(votante);
         }
 
-        // --------------------------------------------------
         // GENERAR CÓDIGO DE ACCESO POR ID
-        // --------------------------------------------------
+
         [HttpPost("generar-acceso/{votanteId}")]
         public async Task<IActionResult> GenerarAcceso(int votanteId)
         {
@@ -114,9 +109,9 @@ namespace SistemaVotoElectronico.API.Controllers
             return Ok(new { codigoParaElVotante = codigo });
         }
 
-        // --------------------------------------------------
+        
         // GENERAR CÓDIGO DE ACCESO POR CÉDULA
-        // --------------------------------------------------
+
         [HttpPost("generar-codigo/{cedula}")]
         public async Task<IActionResult> GenerarCodigoPorCedula(string cedula)
         {
@@ -148,9 +143,8 @@ namespace SistemaVotoElectronico.API.Controllers
                 nombre = $"{votante.Nombre} {votante.Apellido}"
             });
         }
-        // --------------------------------------------------
         // LISTAR TODOS LOS VOTANTES (Con ubicación completa)
-        // --------------------------------------------------
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Votante>>> GetVotantes()
         {

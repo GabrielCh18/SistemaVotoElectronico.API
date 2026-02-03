@@ -17,23 +17,21 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
-        // 👇 ESTE ES EL MÉTODO ÚNICO (FUSIONADO)
+        //ESTE ES EL MÉTODO ÚNICO (FUSIONADO)
         public async Task<IActionResult> Index(string? cedula)
         {
-            // ---------------------------------------------------------
-            // PARTE 1: VERIFICAR ESTADO DE ELECCIÓN (Para el botón)
-            // ---------------------------------------------------------
+            //VERIFICAR ESTADO DE ELECCIÓN (Para el botón)
+           
             var procesoActivo = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
 
             // Si hay un proceso activo (datos existen y no es nulo), estamos votando
             bool hayEleccionEnCurso = (procesoActivo.Success && procesoActivo.Data != null);
 
-            // LOGICA CORREGIDA DEL BOTÓN:
             // Solo mostramos resultados si NO hay elección en curso Y hay historial previo
             if (hayEleccionEnCurso)
             {
                 ViewBag.MostrarResultados = false; // Ocultar botón
-                ViewBag.MensajeEstado = "🗳️ Elecciones en Curso"; // Mensaje informativo
+                ViewBag.MensajeEstado = "🗳️ Elecciones en Curso"; 
             }
             else
             {
@@ -44,16 +42,15 @@ namespace SistemaVotoElectronico.MVC.Controllers
                 ViewBag.MostrarResultados = hayHistorial; // Mostrar botón si hay algo que mostrar
             }
 
-            // ---------------------------------------------------------
             // PARTE 2: LÓGICA DEL BUSCADOR (Si escribieron cédula)
-            // ---------------------------------------------------------
+          
             if (!string.IsNullOrEmpty(cedula))
             {
                 var response = await _apiService.GetAsync<Votante>($"Votantes/buscar/{cedula}");
 
                 if (response.Success && response.Data != null)
                 {
-                    return View(response.Data); // Retorna vista CON el votante encontrado
+                    return View(response.Data); // Retorna vista con el votante encontrado
                 }
                 else
                 {
@@ -77,7 +74,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        [HttpPost] // Usamos POST para seguridad
+        [HttpPost] 
         public async Task<IActionResult> ObtenerCertificado(int id, string nombre, string cedula, string proceso)
         {
             // 1. Marcamos en la BD que ya se descargó

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization; // 1. Namespace de Seguridad
+﻿using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc;
 using SistemaVoto.Modelos;
 using SistemaVotoElectronico.ApiConsumer;
@@ -16,9 +16,9 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
-        // =========================================================
-        // 1️⃣ LISTAR CANDIDATOS DEL PROCESO ACTIVO
-        // =========================================================
+    
+        // LISTAR CANDIDATOS DEL PROCESO ACTIVO
+        
         public async Task<IActionResult> Candidatos()
         {
             var procesoActivo = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
@@ -34,9 +34,9 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(respuesta.Success ? respuesta.Data : new List<Candidato>());
         }
 
-        // =========================================================
-        // 2️⃣ CREAR PROCESO ELECTORAL
-        // =========================================================
+       
+        // CREAR PROCESO ELECTORAL
+        
         [HttpGet]
         public IActionResult CrearProceso()
         {
@@ -57,7 +57,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
                 return View(proceso);
             }
 
-            // 🔒 Cerrar procesos activos anteriores automáticamente
+            //Cerrar procesos activos anteriores automáticamente
             var procesos = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
             var activos = procesos.Data?.Where(p => p.Activo).ToList();
 
@@ -83,9 +83,9 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(proceso);
         }
 
-        // =========================================================
-        // 3️⃣ CREAR CANDIDATO
-        // =========================================================
+        
+        // CREAR CANDIDATO
+        
         [HttpGet]
         public IActionResult CrearCandidato()
         {
@@ -115,9 +115,9 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(candidato);
         }
 
-        // =========================================================
-        // 4️⃣ ELIMINAR CANDIDATO
-        // =========================================================
+        
+        // ELIMINAR CANDIDATO
+        
         public async Task<IActionResult> Eliminar(int id)
         {
             var respuesta = await _apiService.DeleteAsync($"Candidatos/{id}");
@@ -126,9 +126,9 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return RedirectToAction("Candidatos");
         }
 
-        // =========================================================
-        // 5️⃣ HISTORIAL DE PROCESOS
-        // =========================================================
+       
+        //  HISTORIAL DE PROCESOS
+        
         [HttpGet]
         public async Task<IActionResult> Historial()
         {
@@ -139,9 +139,9 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return View(lista);
         }
 
-        // =========================================================
-        // 6️⃣ ELIMINAR PROCESO
-        // =========================================================
+        
+        // ELIMINAR PROCESO
+        
         public async Task<IActionResult> EliminarProceso(int id)
         {
             // Llamamos al API para borrar
@@ -151,9 +151,9 @@ namespace SistemaVotoElectronico.MVC.Controllers
             return RedirectToAction("Historial");
         }
 
-        // =========================================================
-        // 7️⃣ FINALIZAR ELECCIÓN ACTIVA
-        // =========================================================
+       
+        //FINALIZAR ELECCIÓN ACTIVA
+       
         public async Task<IActionResult> FinalizarActual()
         {
             // 1. Buscamos el activo

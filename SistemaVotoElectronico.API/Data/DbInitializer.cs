@@ -14,7 +14,7 @@ namespace SistemaVotoElectronico.API.Data
             if (context.Votantes.Any())
                 return;
 
-            // 1️⃣ Ubicación
+            // Ubicación
             var prov = new Provincia { Nombre = "Imbabura" };
             context.Provincias.Add(prov);
             context.SaveChanges();
@@ -36,7 +36,7 @@ namespace SistemaVotoElectronico.API.Data
             context.Zonas.Add(zon);
             context.SaveChanges();
 
-            // 2️⃣ Junta
+            // Junta
             var jun = new Junta
             {
                 Numero = 1,
@@ -46,7 +46,7 @@ namespace SistemaVotoElectronico.API.Data
             context.Juntas.Add(jun);
             context.SaveChanges();
 
-            // 3️⃣ Votante (SIN YaVoto)
+            // Votante
             var votante = new Votante
             {
                 Nombre = "Juan",
@@ -56,7 +56,7 @@ namespace SistemaVotoElectronico.API.Data
             };
             context.Votantes.Add(votante);
 
-            // 4️⃣ Candidatos
+            //Candidatos
             context.Candidatos.AddRange(
                 new Candidato
                 {

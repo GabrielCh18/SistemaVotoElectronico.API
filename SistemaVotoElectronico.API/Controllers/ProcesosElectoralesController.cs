@@ -16,7 +16,6 @@ namespace SistemaVotoElectronico.API.Controllers
             _context = context;
         }
         // GET: api/ProcesosElectorales/5
-        // ESTE ES EL QUE FALTABA PARA QUE EL HISTORIAL FUNCIONE
         [HttpGet("{id}")]
         public async Task<ActionResult<ProcesoElectoral>> GetProceso(int id)
         {
@@ -44,7 +43,6 @@ namespace SistemaVotoElectronico.API.Controllers
         [HttpGet("activo")]
         public async Task<ActionResult<ProcesoElectoral>> GetProcesoActivo()
         {
-            // TRUCO PARA DOCKER/RENDER: 
             // Obtenemos la hora UTC (Universal) y le restamos 5 horas para simular Ecuador
             var ahoraEcuador = DateTime.UtcNow.AddHours(-5);
 
@@ -81,7 +79,7 @@ namespace SistemaVotoElectronico.API.Controllers
             return Ok(proceso);
         }
 
-        // ⚠️ CAMBIO IMPORTANTE: De PUT a POST para que funcione con tu MVC
+        // CAMBIO IMPORTANTE: De PUT a POST para que funcione con el MVC
         // POST: cerrar proceso manualmente
         [HttpPost("cerrar/{id}")]
         public async Task<IActionResult> CerrarProceso(int id)

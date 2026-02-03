@@ -7,13 +7,13 @@ namespace SistemaVotoElectronico.API.Data
     {
         public VotoContext(DbContextOptions<VotoContext> options) : base(options) { }
 
-        // --- MÓDULO DE VOTACIÓN ---
+        //  MÓDULO DE VOTACIÓN 
         public DbSet<Candidato> Candidatos { get; set; }
         public DbSet<Voto> Votos { get; set; }
         public DbSet<Votante> Votantes { get; set; } //
         public DbSet<TokenVotacion> Tokens { get; set; } //
 
-        // --- MÓDULO DE UBICACIÓN (Para filtros y mesas) ---
+        //  MÓDULO DE UBICACIÓN (Para filtros y mesas) 
         public DbSet<Provincia> Provincias { get; set; }
         public DbSet<Canton> Cantones { get; set; }
         public DbSet<Parroquia> Parroquias { get; set; }
@@ -30,7 +30,7 @@ namespace SistemaVotoElectronico.API.Data
             // El código de votación también debe ser único
             modelBuilder.Entity<TokenVotacion>().HasIndex(t => t.CodigoUnico).IsUnique();
 
-            // 🔥 RELACIÓN PROCESO ELECTORAL → CANDIDATOS
+            // RELACIÓN PROCESO ELECTORAL → CANDIDATOS
             modelBuilder.Entity<Candidato>()
                 .HasOne(c => c.ProcesoElectoral)
                 .WithMany(p => p.Candidatos)

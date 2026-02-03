@@ -30,12 +30,11 @@ namespace SistemaVotoElectronico.API.Controllers
 
             if (proceso == null) return NotFound("Proceso electoral no encontrado.");
 
-            // ==========================================
             // 2. CONSULTA DE VOTOS (LO QUE SÍ VOTARON)
-            // ==========================================
+
             var queryVotos = _context.Votos.Where(v => v.ProcesoElectoralId == procesoId);
 
-            // Filtros Geográficos para VOTOS (Igual que tenía tu compañero)
+            // Filtros Geográficos para VOTOS 
             if (provinciaId.HasValue)
                 queryVotos = queryVotos.Where(v => v.Votante.Junta.Zona.Parroquia.Canton.ProvinciaId == provinciaId);
             if (cantonId.HasValue)
@@ -46,9 +45,7 @@ namespace SistemaVotoElectronico.API.Controllers
             var listaVotos = await queryVotos.Include(v => v.Votante).ToListAsync();
             int totalVotos = listaVotos.Count;
 
-            // ==========================================
-            // 3. 🔥 CONSULTA DE EMPADRONADOS (PADRÓN) 🔥
-            // ==========================================
+            // CONSULTA DE EMPADRONADOS (PADRÓN) 
             // Aquí contamos a TODOS los inscritos en esa zona, hayan votado o no.
             var queryVotantes = _context.Votantes.AsQueryable();
 
@@ -61,7 +58,7 @@ namespace SistemaVotoElectronico.API.Controllers
 
             int totalEmpadronados = await queryVotantes.CountAsync();
 
-            // 4. CÁLCULOS FINALES
+            // CÁLCULOS FINALES
             int ausentismo = totalEmpadronados - totalVotos;
             double porcAusentismo = totalEmpadronados > 0
                 ? Math.Round(((double)ausentismo / totalEmpadronados) * 100, 2)
@@ -70,13 +67,13 @@ namespace SistemaVotoElectronico.API.Controllers
             var respuesta = new ResumenGeneral
             {
                 TotalVotos = totalVotos,
-                TotalEmpadronados = totalEmpadronados, // ✅
-                Ausentismo = ausentismo,               // ✅
-                PorcentajeAusentismo = porcAusentismo, // ✅
+                TotalEmpadronados = totalEmpadronados, 
+                Ausentismo = ausentismo,               
+                PorcentajeAusentismo = porcAusentismo, 
                 Estado = proceso.Activo ? "En Curso" : "Finalizado"
             };
 
-            // 5. Armamos la lista de candidatos (Igual que antes)
+            // 5. Armamos la lista de candidatos 
             var idsCandidatosReales = proceso.Candidatos.Select(c => c.Id).ToList();
 
             foreach (var candidato in proceso.Candidatos)

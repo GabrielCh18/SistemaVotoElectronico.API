@@ -10,7 +10,6 @@
         public double Porcentaje { get; set; }
     }
 
-    // Toda la pantalla (Resumen)
     public class ResumenGeneral
     {
         public int TotalVotos { get; set; }

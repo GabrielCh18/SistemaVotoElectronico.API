@@ -74,7 +74,7 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 
-// INICIO DEL BLOQUE MÁGICO: Crear Admin Automáticamente 🔥
+// INICIO DEL BLOQUE MÁGICO: Crear Admin Automáticamente 
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

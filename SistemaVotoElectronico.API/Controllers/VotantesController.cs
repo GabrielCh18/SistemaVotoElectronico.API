@@ -40,7 +40,7 @@ namespace SistemaVotoElectronico.API.Controllers
         [HttpGet("buscar/{cedula}")]
         public async Task<ActionResult<Votante>> GetVotante(string cedula)
         {
-            // 1. Buscamos al ciudadano y sus datos
+            // Buscamos al ciudadano y sus datos
             var votante = await _context.Votantes
                 .Include(v => v.Junta)
                 .ThenInclude(j => j.Zona)
@@ -48,7 +48,7 @@ namespace SistemaVotoElectronico.API.Controllers
 
             if (votante == null) return NotFound("Ciudadano no encontrado.");
 
-            // 2. Buscamos si hay ELECCIÓN ACTIVA
+            // Buscamos si hay ELECCIÓN ACTIVA
             var ahora = DateTime.UtcNow;
             var procesoActivo = await _context.ProcesoElectorales
                 .FirstOrDefaultAsync(p => p.Activo && p.FechaInicio <= ahora && p.FechaFin >= ahora);
@@ -57,7 +57,7 @@ namespace SistemaVotoElectronico.API.Controllers
             {
                 votante.NombreProceso = procesoActivo.Nombre;
 
-                // Verificamos si ya votó en ESTE proceso
+                // Verificamos si ya votó en este proceso
                 votante.YaVoto = await _context.Votos.AnyAsync(v =>
                     v.IdVotante == votante.Id &&
                     v.ProcesoElectoralId == procesoActivo.Id

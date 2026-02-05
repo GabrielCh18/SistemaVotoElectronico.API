@@ -23,14 +23,14 @@ namespace SistemaVotoElectronico.API.Controllers
             [FromQuery] int? cantonId,
             [FromQuery] int? parroquiaId)
         {
-            // 1. Verificamos proceso
+            // Verificamos proceso
             var proceso = await _context.ProcesoElectorales
                                         .Include(p => p.Candidatos)
                                         .FirstOrDefaultAsync(p => p.Id == procesoId);
 
             if (proceso == null) return NotFound("Proceso electoral no encontrado.");
 
-            // 2. CONSULTA DE VOTOS (LO QUE SÍ VOTARON)
+            // CONSULTA DE VOTOS (LO QUE SÍ VOTARON)
 
             var queryVotos = _context.Votos.Where(v => v.ProcesoElectoralId == procesoId);
 
@@ -73,7 +73,7 @@ namespace SistemaVotoElectronico.API.Controllers
                 Estado = proceso.Activo ? "En Curso" : "Finalizado"
             };
 
-            // 5. Armamos la lista de candidatos 
+            // Armamos la lista de candidatos 
             var idsCandidatosReales = proceso.Candidatos.Select(c => c.Id).ToList();
 
             foreach (var candidato in proceso.Candidatos)
@@ -91,7 +91,7 @@ namespace SistemaVotoElectronico.API.Controllers
                 });
             }
 
-            // 6. Votos Nulos
+            // Votos Nulos
             int nulos = listaVotos.Count(v => !idsCandidatosReales.Contains(v.CandidatoId));
             if (nulos > 0)
             {

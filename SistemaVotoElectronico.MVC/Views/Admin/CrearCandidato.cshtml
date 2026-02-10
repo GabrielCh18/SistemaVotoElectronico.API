@@ -9,7 +9,6 @@
                 </div>
                 <div class="card-body bg-light">
                     <form asp-action="CrearCandidato" method="post">
-
                         <div class="mb-3">
                             <label class="form-label fw-bold">Nombre del Candidato</label>
                             <input asp-for="Nombre" class="form-control" placeholder="Ej: Juan Pérez" required />
@@ -23,6 +22,8 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold">Dignidad</label>
                             <select asp-for="Dignidad" class="form-select">
+                                <option value="Asambleísta Nacional">Asambleísta Nacional</option>
+                                <option value="Asambleísta Provincial">Asambleísta Provincial</option>
                                 <option value="Presidente">Presidente</option>
                                 <option value="Alcalde">Alcalde</option>
                                 <option value="Prefecto">Prefecto</option>

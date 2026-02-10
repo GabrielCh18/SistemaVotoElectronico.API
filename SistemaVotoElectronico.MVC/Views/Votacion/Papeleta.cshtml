@@ -4,33 +4,57 @@
     Layout = "~/Views/Shared/_LayoutVotacion.cshtml";
 }
 
-<div class="container text-center mt-4">
-    <h1 class="mb-2">@ViewBag.Icono Elija a su @ViewBag.Paso</h1>
-    <p class="text-muted mb-5">Haga clic en el botón para seleccionar su opción preferida.</p>
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h1>@ViewBag.Icono Elija su lista de @ViewBag.Paso</h1>
+        <p class="text-muted">Seleccione la lista de su preferencia para continuar.</p>
+    </div>
 
-    @if (ViewBag.Error != null)
-    {
-        <div class="alert alert-danger">@ViewBag.Error</div>
-    }
-
-    <div class="row justify-content-center">
-        @foreach (var item in Model)
+    <div class="row">
+        @foreach (var grupo in Model.GroupBy(c => c.PartidoPolitico))
         {
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 border-0 shadow hover-effect">
-                    <img src="@item.FotoUrl" class="card-img-top p-3 rounded-circle mx-auto d-block" style="width: 200px; height: 200px; object-fit: cover;" alt="@item.Nombre">
-                    <div class="card-body">
-                        <h3 class="card-title">@item.Nombre</h3>
-                        <h5 class="text-primary">@item.PartidoPolitico</h5>
-                        <p class="card-text text-muted">@item.Dignidad</p>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-lg border-0 h-100">
+                    <div class="card-header bg-dark text-white text-center">
+                        <h4 class="mb-0">@grupo.Key</h4>
                     </div>
-                    <div class="card-footer bg-white border-0 pb-4">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            @if (ViewBag.FaseActual == "Presidente")
+                            {
+                                <div class="col-12 text-center mb-3">
+                                    <div class="d-flex justify-content-center gap-3">
+                                        @foreach (var c in grupo)
+                                        {
+                                            <div class="text-center">
+                                                <img src="@c.FotoUrl" class="rounded-circle shadow" style="width: 100px; height: 100px; object-fit: cover;">
+                                                <p class="small mb-0"><strong>@c.Nombre</strong></p>
+                                                <span class="badge bg-secondary">@c.Dignidad</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="col-12">
+                                    <h6 class="text-muted border-bottom pb-2">Integrantes de la Lista:</h6>
+                                    <ul class="list-unstyled">
+                                        @foreach (var c in grupo)
+                                        {
+                                            <li><i class="bi bi-person-check-fill text-success"></i> @c.Nombre</li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-0 pb-3">
                         <form asp-action="Votar" method="post">
-                            <input type="hidden" name="candidatoId" value="@item.Id" />
+                            <input type="hidden" name="candidatoId" value="@grupo.First().Id" />
                             <input type="hidden" name="faseActual" value="@ViewBag.FaseActual" />
-
-                            <button type="submit" class="btn btn-outline-success btn-lg w-100 rounded-pill">
-                                ✅ Seleccionar @item.Nombre.Split(' ')[0]
+                            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill">
+                                ✅ Votar por @grupo.Key
                             </button>
                         </form>
                     </div>

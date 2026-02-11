@@ -12,7 +12,7 @@ using SistemaVotoElectronico.API.Data;
 namespace SistemaVotoElectronico.API.Migrations
 {
     [DbContext(typeof(VotoContext))]
-    [Migration("20260211015404_MoverCertificadoAVoto")]
+    [Migration("20260211145122_MoverCertificadoAVoto")]
     partial class MoverCertificadoAVoto
     {
         /// <inheritdoc />

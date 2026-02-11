@@ -14,7 +14,7 @@ namespace SistemaVoto.Modelos
         public int IdVotante { get; set; }
         [ForeignKey(nameof(IdVotante))]
         public Votante? Votante { get; set; }
-
+        public bool CertificadoDescargado { get; set; } = false;
         // Candidato
         public int CandidatoId { get; set; }
         [ForeignKey(nameof(CandidatoId))]

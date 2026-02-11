@@ -36,11 +36,12 @@ namespace SistemaVotoElectronico.API.Controllers
             return CreatedAtAction(nameof(GetVotante), new { cedula = votante.Cedula }, votante);
         }
 
-        // BUSCAR VOTANTE POR CÉDULA
+        //  CAMBIO IMPORTANTE 1: BUSCAR VOTANTE Y SU ESTADO EN LA ELECCIÓN
+        
         [HttpGet("buscar/{cedula}")]
         public async Task<ActionResult<Votante>> GetVotante(string cedula)
         {
-            // Buscamos al ciudadano y sus datos
+            // 1. Buscamos al ciudadano
             var votante = await _context.Votantes
                 .Include(v => v.Junta)
                 .ThenInclude(j => j.Zona)
@@ -48,24 +49,33 @@ namespace SistemaVotoElectronico.API.Controllers
 
             if (votante == null) return NotFound("Ciudadano no encontrado.");
 
-            // Buscamos si hay ELECCIÓN ACTIVA
+            // 2. Buscamos si hay ELECCIÓN ACTIVA
             var ahora = DateTime.UtcNow;
             var procesoActivo = await _context.ProcesoElectorales
                 .FirstOrDefaultAsync(p => p.Activo && p.FechaInicio <= ahora && p.FechaFin >= ahora);
+
+            // Inicializamos en falso por defecto
+            votante.YaVoto = false;
+            votante.CertificadoDescargado = false;
 
             if (procesoActivo != null)
             {
                 votante.NombreProceso = procesoActivo.Nombre;
 
-                // Verificamos si ya votó en este proceso
-                votante.YaVoto = await _context.Votos.AnyAsync(v =>
-                    v.IdVotante == votante.Id &&
-                    v.ProcesoElectoralId == procesoActivo.Id
-                );
+                // CORRECCIÓN: Buscamos el VOTO específico en ESTE proceso
+                var votoRegistrado = await _context.Votos
+                    .FirstOrDefaultAsync(v => v.IdVotante == votante.Id &&
+                                              v.ProcesoElectoralId == procesoActivo.Id);
+
+                if (votoRegistrado != null)
+                {
+                    votante.YaVoto = true;
+                    // Aquí leemos el estado real desde la tabla Votos, no del Votante
+                    votante.CertificadoDescargado = votoRegistrado.CertificadoDescargado;
+                }
             }
 
-            // RECUPERAMOS EL TOKEN ACTIVO 
-            // Buscamos el código que no ha expirado y no se ha usado
+            // 3. RECUPERAMOS EL TOKEN ACTIVO (Si existe)
             var tokenActivo = await _context.Tokens
                 .Where(t => t.VotanteId == votante.Id &&
                             !t.FueUsado &&
@@ -75,14 +85,13 @@ namespace SistemaVotoElectronico.API.Controllers
 
             if (tokenActivo != null)
             {
-                votante.Token = tokenActivo.CodigoUnico; // Lo guardamos para enviarlo al MVC
+                votante.Token = tokenActivo.CodigoUnico;
             }
 
             return Ok(votante);
         }
 
         // GENERAR CÓDIGO DE ACCESO POR ID
-
         [HttpPost("generar-acceso/{votanteId}")]
         public async Task<IActionResult> GenerarAcceso(int votanteId)
         {
@@ -90,10 +99,7 @@ namespace SistemaVotoElectronico.API.Controllers
             if (votante == null)
                 return NotFound("Votante no existe.");
 
-            string codigo = Guid.NewGuid()
-                .ToString("N")
-                .Substring(0, 6)
-                .ToUpper();
+            string codigo = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
 
             var token = new TokenVotacion
             {
@@ -109,22 +115,15 @@ namespace SistemaVotoElectronico.API.Controllers
             return Ok(new { codigoParaElVotante = codigo });
         }
 
-        
         // GENERAR CÓDIGO DE ACCESO POR CÉDULA
-
         [HttpPost("generar-codigo/{cedula}")]
         public async Task<IActionResult> GenerarCodigoPorCedula(string cedula)
         {
-            var votante = await _context.Votantes
-                .FirstOrDefaultAsync(v => v.Cedula == cedula);
+            var votante = await _context.Votantes.FirstOrDefaultAsync(v => v.Cedula == cedula);
 
-            if (votante == null)
-                return NotFound("Votante no existe.");
+            if (votante == null) return NotFound("Votante no existe.");
 
-            string codigo = Guid.NewGuid()
-                .ToString("N")
-                .Substring(0, 6)
-                .ToUpper();
+            string codigo = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
 
             var token = new TokenVotacion
             {
@@ -143,8 +142,8 @@ namespace SistemaVotoElectronico.API.Controllers
                 nombre = $"{votante.Nombre} {votante.Apellido}"
             });
         }
-        // LISTAR TODOS LOS VOTANTES (Con ubicación completa)
 
+        // LISTAR TODOS LOS VOTANTES
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Votante>>> GetVotantes()
         {
@@ -157,18 +156,34 @@ namespace SistemaVotoElectronico.API.Controllers
                 .ToListAsync();
         }
 
-        [HttpPost("marcar-certificado/{id}")]
-        public async Task<IActionResult> MarcarCertificado(int id)
+        // CAMBIO IMPORTANTE 2: MARCAR EL VOTO, NO AL VOTANTE
+        
+        [HttpPost("marcar-certificado/{votanteId}")]
+        public async Task<IActionResult> MarcarCertificado(int votanteId)
         {
-            var votante = await _context.Votantes.FindAsync(id);
-            if (votante == null) return NotFound();
+            // 1. Buscamos el proceso electoral activo
+            var procesoActivo = await _context.ProcesoElectorales
+                .FirstOrDefaultAsync(p => p.Activo);
 
-            votante.CertificadoDescargado = true;
+            if (procesoActivo == null)
+                return NotFound("No hay ningún proceso electoral activo.");
 
-            _context.Entry(votante).State = EntityState.Modified;
+            // 2. Buscamos el VOTO de este votante en ESTE proceso
+            var voto = await _context.Votos
+                .FirstOrDefaultAsync(v => v.IdVotante == votanteId &&
+                                          v.ProcesoElectoralId == procesoActivo.Id);
+
+            if (voto == null)
+                return NotFound("No se encontró el voto. El ciudadano no ha sufragado en esta elección.");
+
+            // 3. Marcamos el certificado como descargado EN EL VOTO
+            voto.CertificadoDescargado = true;
+
+            // Guardamos cambios en la tabla Votos
+            _context.Entry(voto).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
-            return Ok();
+            return Ok(new { mensaje = "Certificado marcado exitosamente." });
         }
     }
 }

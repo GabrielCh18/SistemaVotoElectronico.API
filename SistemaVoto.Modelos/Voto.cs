@@ -24,5 +24,8 @@ namespace SistemaVoto.Modelos
         public int ProcesoElectoralId { get; set; }
         [ForeignKey(nameof(ProcesoElectoralId))]
         public ProcesoElectoral? ProcesoElectoral { get; set; }
+
+        // Indica si el certificado de voto ha sido descargado
+        public bool CertificadoDescargado { get; set; } = false;
     }
 }

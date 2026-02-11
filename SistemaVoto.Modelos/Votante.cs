@@ -12,7 +12,8 @@ namespace SistemaVoto.Modelos
 
         public int JuntaId { get; set; }
         public Junta? Junta { get; set; }
-        public bool CertificadoDescargado { get; set; } = false;
+        [NotMapped]
+        public bool CertificadoDescargado { get; set; }
         public ICollection<Voto>? Votos { get; set; }
 
         // PROPIEDADES TEMPORALES (No van a la base de datos)

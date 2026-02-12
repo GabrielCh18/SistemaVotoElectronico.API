@@ -14,20 +14,19 @@ namespace SistemaVotoElectronico.MVC.Controllers
             _apiService = apiService;
         }
 
+        // SOLO DEBE HABER ESTE MÉTODO INDEX (El completo)
         public async Task<IActionResult> Index(int? procesoId, int? provinciaId, int? cantonId, int? parroquiaId)
         {
             ProcesoElectoral proceso = null;
 
-            //  LÓGICA PARA ELEGIR EL PROCESO 
+            // 1. LÓGICA PARA ELEGIR EL PROCESO (Activo o por ID)
             if (procesoId.HasValue)
             {
-                // Si vienes del Historial
                 var result = await _apiService.GetAsync<ProcesoElectoral>($"ProcesosElectorales/{procesoId}");
                 if (result.Success) proceso = result.Data;
             }
             else
             {
-                // Si vienes directo (Buscamos Activo o Último Cerrado)
                 var activoResp = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
                 if (activoResp.Success && activoResp.Data != null)
                 {
@@ -35,19 +34,17 @@ namespace SistemaVotoElectronico.MVC.Controllers
                 }
                 else
                 {
+                    // Si no hay activo, busca el último cerrado
                     var listaResp = await _apiService.GetListAsync<ProcesoElectoral>("ProcesosElectorales");
                     if (listaResp.Success && listaResp.Data != null)
-                    {
                         proceso = listaResp.Data.OrderByDescending(p => p.FechaFin).FirstOrDefault();
-                    }
                 }
             }
 
-            //  CARGAMOS LAS PROVINCIAS PARA EL FILTRO 
+            // 2. CARGAR COMBOS DE FILTRO
             var provsResp = await _apiService.GetListAsync<Provincia>("Geografia/provincias");
             ViewBag.Provincias = new SelectList(provsResp.Data ?? new List<Provincia>(), "Id", "Nombre", provinciaId);
 
-            // Guardamos selección actual para que JavaScript sepa qué mostrar
             ViewBag.ProvinciaId = provinciaId;
             ViewBag.CantonId = cantonId;
             ViewBag.ParroquiaId = parroquiaId;
@@ -55,14 +52,14 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             if (proceso == null)
             {
-                ViewBag.Error = "No se encontraron elecciones registradas.";
+                ViewBag.Error = "No hay elecciones registradas.";
                 return View(new ResumenGeneral());
             }
 
-            ViewBag.NombreProceso = $"Elecciones del {proceso.FechaInicio:dd/MM/yyyy}";
+            ViewBag.NombreProceso = proceso.Nombre; // Muestra el nombre real
 
-            //  LLAMADA AL API CON FILTROS 
-            string url = $"Resultados/{proceso.Id}?dummy=1"; 
+            // 3. PEDIR RESULTADOS A LA API
+            string url = $"Resultados/{proceso.Id}?dummy=1";
             if (provinciaId.HasValue) url += $"&provinciaId={provinciaId}";
             if (cantonId.HasValue) url += $"&cantonId={cantonId}";
             if (parroquiaId.HasValue) url += $"&parroquiaId={parroquiaId}";
@@ -71,7 +68,7 @@ namespace SistemaVotoElectronico.MVC.Controllers
 
             if (respuesta.Success) return View(respuesta.Data);
 
-            ViewBag.Error = "No se pudieron cargar los datos del conteo.";
+            ViewBag.Error = "No se pudieron cargar los datos.";
             return View(new ResumenGeneral());
         }
     }

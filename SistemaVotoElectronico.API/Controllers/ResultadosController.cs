@@ -87,7 +87,8 @@ namespace SistemaVotoElectronico.API.Controllers
                     Partido = candidato.PartidoPolitico,
                     FotoUrl = candidato.FotoUrl ?? "",
                     CantidadVotos = votosCandidato,
-                    Porcentaje = Math.Round(porcentaje, 2)
+                    Porcentaje = Math.Round(porcentaje, 2),
+                    Dignidad = candidato.Dignidad
                 });
             }
 

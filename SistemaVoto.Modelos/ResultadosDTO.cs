@@ -8,6 +8,7 @@
         public string FotoUrl { get; set; }
         public int CantidadVotos { get; set; }
         public double Porcentaje { get; set; }
+        public string Dignidad { get; set; }
     }
 
     public class ResumenGeneral

@@ -1,52 +1,85 @@
 ﻿@model List<SistemaVoto.Modelos.Candidato>
 
+@{
+    ViewData["Title"] = "Administrar Candidatos";
+}
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>👮‍♂️ Administración de Candidatos</h2>
-        <a asp-action="CrearCandidato" class="btn btn-primary">
+        <a asp-action="CrearCandidato" class="btn btn-primary shadow-sm">
             ➕ Nuevo Candidato
         </a>
     </div>
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger">@TempData["Error"]</div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     }
 
-    <table class="table table-hover shadow-sm align-middle">
-        <thead class="table-dark">
-            <tr>
-                <th>Foto</th>
-                <th>Nombre</th>
-                <th>Partido</th>
-                <th>Dignidad</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-hover shadow-sm align-middle bg-white rounded">
+            <thead class="table-dark">
                 <tr>
-                    <td>
-                        @if (!string.IsNullOrEmpty(item.FotoUrl))
-                        {
-                            <img src="@item.FotoUrl" class="rounded-circle border" width="50" height="50" style="object-fit:cover" />
-                        }
-                        else
-                        {
-                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:50px; height:50px;">📷</div>
-                        }
-                    </td>
-                    <td class="fw-bold">@item.Nombre</td>
-                    <td>@item.PartidoPolitico</td>
-                    <td><span class="badge bg-info text-dark">@item.Dignidad</span></td>
-                    <td>
-                        <a asp-action="Eliminar" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Seguro que quieres borrar a @item.Nombre? Esta acción no se puede deshacer.');">
-                            🗑️ Eliminar
-                        </a>
-                    </td>
+                    <th>Foto</th>
+                    <th>Nombre</th>
+                    <th>Partido</th>
+                    <th>Dignidad</th>
+                    <th class="text-center">Acciones</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.FotoUrl))
+                                {
+                                    <img src="@item.FotoUrl" class="rounded-circle border" width="50" height="50" style="object-fit:cover" />
+                                }
+                                else
+                                {
+                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:50px; height:50px; font-size: 20px;">📷</div>
+                                }
+                            </td>
+                            <td class="fw-bold">@item.Nombre</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">@item.PartidoPolitico</span>
+                            </td>
+                            <td><span class="badge bg-info text-dark">@item.Dignidad</span></td>
+                            <td class="text-center">
+                                <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('⚠️ ¿Estás SEGURO de eliminar a @item.Nombre?\n\nEsta acción borrará también sus votos y NO se puede deshacer.');">
+                                        🗑️ Eliminar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            Currently, there are no candidates registered for the active process.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

@@ -53,7 +53,6 @@ namespace SistemaVotoElectronico.MVC.Controllers
             // 3. Asignar el ID del proceso al candidato
             candidato.ProcesoElectoralId = procesoActivo.Data.Id;
 
-            // 👇 LA SOLUCIÓN AL BUG: Borramos el error de validación del ID
             ModelState.Remove("ProcesoElectoralId");
 
             // 4. Validar el resto del modelo
@@ -74,6 +73,35 @@ namespace SistemaVotoElectronico.MVC.Controllers
             // Si la API devuelve error, lo mostramos
             ModelState.AddModelError("", $"Error al crear: {respuesta.Message}");
             return View(candidato);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken] 
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            // Verificamos si es Admin (aunque el [Authorize] de arriba ya lo hace)
+            if (!User.IsInRole("Admin"))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Llamamos a la API para borrar
+            // Asegúrate de que tu ApiService tenga el método DeleteAsync implementado
+            var respuesta = await _apiService.DeleteAsync($"Candidatos/{id}");
+
+            if (!respuesta.Success)
+            {
+                // Si falla (ej: tiene votos), mostramos error
+                TempData["Error"] = $"❌ No se pudo eliminar: {respuesta.Message}";
+            }
+            else
+            {
+                // Si funciona, mensaje verde
+                TempData["Mensaje"] = "✅ Candidato eliminado correctamente.";
+            }
+
+            // Recargamos la lista
+            return RedirectToAction("Candidatos");
         }
 
         [HttpGet]

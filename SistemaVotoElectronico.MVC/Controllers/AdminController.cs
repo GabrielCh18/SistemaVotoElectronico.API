@@ -33,25 +33,46 @@ namespace SistemaVotoElectronico.MVC.Controllers
         [HttpPost]
         public async Task<IActionResult> CrearCandidato(Candidato candidato)
         {
+            // 1. Verificación de seguridad manual (si no usas [Authorize])
+            // Si estás usando Identity, lo mejor es poner [Authorize(Roles = "Admin")] arriba del método.
+            // Pero si quieres mantener tu lógica actual:
+            if (!User.IsInRole("Admin"))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // 2. Obtener el proceso electoral activo
             var procesoActivo = await _apiService.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo");
+
             if (!procesoActivo.Success || procesoActivo.Data == null)
             {
-                ViewBag.Error = "⚠️ No hay un proceso activo.";
+                ModelState.AddModelError("", "⚠️ No hay un proceso electoral activo. Crea un proceso primero.");
                 return View(candidato);
             }
 
+            // 3. Asignar el ID del proceso al candidato
             candidato.ProcesoElectoralId = procesoActivo.Data.Id;
 
-            // 🔥 CORRECCIÓN: Limpieza de validación para que permita guardar
-            ModelState.Remove("ProcesoElectoral");
-            ModelState.Remove("Votos");
+            // 👇 LA SOLUCIÓN AL BUG: Borramos el error de validación del ID
+            ModelState.Remove("ProcesoElectoralId");
 
-            if (!ModelState.IsValid) return View(candidato);
+            // 4. Validar el resto del modelo
+            if (!ModelState.IsValid)
+            {
+                // Si hay otros errores (ej: falta nombre), volvemos a la vista
+                return View(candidato);
+            }
 
+            // 5. Enviar a la API
             var respuesta = await _apiService.PostAsync<Candidato>("Candidatos", candidato);
-            if (respuesta.Success) return RedirectToAction("Candidatos");
 
-            ViewBag.Error = "❌ Error: " + respuesta.Message;
+            if (respuesta.Success)
+            {
+                return RedirectToAction("Candidatos");
+            }
+
+            // Si la API devuelve error, lo mostramos
+            ModelState.AddModelError("", $"Error al crear: {respuesta.Message}");
             return View(candidato);
         }
 

@@ -20,7 +20,6 @@
     bool esAdmin = User.IsInRole("Admin");
 
     // 🗳️ CONSULTA GLOBAL: ¿HAY ELECCIÓN ACTIVA?
-    // Usamos .GetAwaiter().GetResult() porque estamos dentro de una Vista (no es asíncrono nativo)
     var checkProceso = _apiGlobal.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo").GetAwaiter().GetResult();
     bool hayEleccionActiva = (checkProceso.Success && checkProceso.Data != null);
 }
@@ -104,8 +103,6 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
                                     <li><h6 class="dropdown-header text-danger">Control Electoral</h6></li>
-
-                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="Historial">📜 Historial / Cerrar</a></li>
 
                                     <li><a class="dropdown-item" asp-controller="Votaciones" asp-action="Index">🗳️ Elecciones</a></li>
                                     <li><a class="dropdown-item" asp-controller="Admin" asp-action="Candidatos">👤 Candidatos</a></li>

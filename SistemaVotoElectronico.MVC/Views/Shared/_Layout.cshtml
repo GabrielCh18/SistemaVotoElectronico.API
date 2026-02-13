@@ -10,16 +10,12 @@
 @{
     string ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
 
-    // 🛡️ ZONA PÚBLICA (Modo Camuflaje)
     bool esZonaPublica = (ctrl == "Home" || ctrl == "Resultados");
 
-    // 🛡️ ZONA JEFE (Sesión antigua)
     bool esZonaJefe = (ctrl == "JefeMesa");
 
-    // 🔥 EL NUEVO PODER: Preguntamos si es Admin
     bool esAdmin = User.IsInRole("Admin");
 
-    // 🗳️ CONSULTA GLOBAL: ¿HAY ELECCIÓN ACTIVA?
     var checkProceso = _apiGlobal.GetAsync<ProcesoElectoral>("ProcesosElectorales/activo").GetAwaiter().GetResult();
     bool hayEleccionActiva = (checkProceso.Success && checkProceso.Data != null);
 }
@@ -68,7 +64,7 @@
                                 <a class="nav-link text-dark fw-bold" asp-area="" asp-controller="Home" asp-action="Index">🏠 Inicio</a>
                             </li>
 
-                            @* 🔥 AQUÍ ESTÁ EL CAMBIO CLAVE: Solo mostramos si NO hay elección activa *@
+                            @*  AQUÍ ESTÁ EL CAMBIO CLAVE: Solo mostramos si NO hay elección activa *@
                             @if (ctrl != "Resultados" && !hayEleccionActiva)
                             {
                                 <li class="nav-item ms-2">
@@ -92,7 +88,7 @@
                             </li>
                         }
 
-                        // 🔥 MENU ADMIN
+                        //  MENU ADMIN
                         else if (esAdmin)
                         {
                             <li class="ms-auto"></li>

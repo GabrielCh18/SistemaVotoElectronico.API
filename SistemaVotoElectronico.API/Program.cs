@@ -12,13 +12,11 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
-//  CONFIGURACIÓN DE BASE DE DATOS (MODO "NUCLEAR")
-// Aquí ponemos la conexión directa para obligar a que funcione
-var connectionString = "Host=dpg-d5nc34mmcj7s73cjiap0-a.oregon-postgres.render.com;Database=sistemavoto_db;Username=sistemavoto_db_user;Password=GxYUpmlLIz58crgtri1ZFVonWuurINFt;SSL Mode=Require;Trust Server Certificate=true";
+//  CONFIGURACIÓN DE BASE DE DATOS (MODO "NUCLEAR" ACTUALIZADO)
+var connectionString = "Host=dpg-d6c57crh46gs738eug9g-a.oregon-postgres.render.com;Port=5432;Database=votosdb_zedt;Username=adminvotos;Password=VaTlTJF50SiSlBwtoeWkkeSZU8YEiFhf;SslMode=Require;TrustServerCertificate=true;";
 
 builder.Services.AddDbContext<VotoContext>(options =>
     options.UseNpgsql(connectionString));
-
 //  CONFIGURACIÓN JWT 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>

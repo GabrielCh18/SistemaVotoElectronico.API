@@ -5,7 +5,7 @@ using SistemaVotoElectronico.MVC.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//CONFIGURACIÓN DE BASE DE DATOS (POSTGRESQL)
+// CONFIGURACIÓN DE BASE DE DATOS (POSTGRESQL)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -24,7 +24,6 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 
 // MVC y SESIÓN
 builder.Services.AddControllersWithViews();
-
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -32,13 +31,14 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// CLIENTE API (Modo Fuerza Bruta: Solo Render)
+// CLIENTE API (Conectado a tu API Local para la defensa)
 builder.Services.AddHttpClient<ApiService>(client =>
 {
-    string urlFija = "https://sistemavotoelectronico-api-s0li.onrender.com/api/";
+    // AQUI ESTA LA MAGIA: Apuntando a tu API local
+    string urlFija = "https://localhost:7090/api/";
 
     Console.WriteLine($"==================================================");
-    Console.WriteLine($"🚀 FORZANDO CONEXIÓN A: {urlFija}");
+    Console.WriteLine($"🚀 CONECTANDO A API LOCAL: {urlFija}");
     Console.WriteLine($"==================================================");
 
     client.BaseAddress = new Uri(urlFija);
@@ -59,7 +59,6 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
 // SEGURIDAD
@@ -71,7 +70,6 @@ app.UseSession();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
 app.MapRazorPages();
 
 // INICIO DEL BLOQUE MÁGICO: Crear Admin Automáticamente 
@@ -90,9 +88,7 @@ using (var scope = app.Services.CreateScope())
         }
 
         // Buscar tu usuario y darle el poder
-        // Correo configurado:
         string emailAdmin = "arevalodany16@gmail.com";
-
         var usuario = await userManager.FindByEmailAsync(emailAdmin);
 
         if (usuario != null)
